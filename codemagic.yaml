@@ -2,6 +2,15 @@
 # Two workflows: the full game and the free 1900 Edition. Start either one from the Codemagic dashboard.
 definitions:
   steps: &ios_steps
+    - name: Sort files into folders
+      script: |
+        # Files uploaded through the GitHub website can land flat; put them where the build expects them.
+        mkdir -p scripts resources src fonts
+        for f in prepare.js patch-ios.js; do [ -f "$f" ] && mv "$f" scripts/; done
+        for f in icon-full.png icon-free.png splash.png splash-dark.png; do [ -f "$f" ] && mv "$f" resources/; done
+        [ -f game.html ] && mv game.html src/
+        for f in *.woff2; do [ -f "$f" ] && mv "$f" fonts/; done
+        ls scripts resources src fonts
     - name: Install packages
       script: npm ci
     - name: Build the game for this edition
