@@ -70,9 +70,28 @@ def medal_png(a):
 
 
 # ---------- App Store Connect API ----------
+def clean_key(raw):
+    """Rebuild the .p8 key as proper PEM, whatever pasting did to its line breaks."""
+    import base64, re as _re
+    s = raw.strip().strip('"').strip("'").replace('\\n', '\n').replace('\r', '')
+    if '-----BEGIN' not in s:
+        try:  # the whole file may have been base64-encoded
+            d = base64.b64decode(s).decode()
+            if '-----BEGIN' in d:
+                s = d
+        except Exception:
+            pass
+    body = _re.sub(r'-----(BEGIN|END)[A-Z ]*-----', '', s)
+    body = _re.sub(r'[^A-Za-z0-9+/=]', '', body)
+    if not body:
+        sys.exit('APP_STORE_CONNECT_PRIVATE_KEY looks empty. Paste the whole text of the .p8 file.')
+    lines = [body[i:i + 64] for i in range(0, len(body), 64)]
+    return '-----BEGIN PRIVATE KEY-----\n' + '\n'.join(lines) + '\n-----END PRIVATE KEY-----\n'
+
+
 def token():
     import jwt
-    key = os.environ['APP_STORE_CONNECT_PRIVATE_KEY'].replace('\\n', '\n')
+    key = clean_key(os.environ['APP_STORE_CONNECT_PRIVATE_KEY'])
     now = int(time.time())
     return jwt.encode({'iss': os.environ['APP_STORE_CONNECT_ISSUER_ID'], 'iat': now, 'exp': now + 1100, 'aud': 'appstoreconnect-v1'},
                       key, algorithm='ES256', headers={'kid': os.environ['APP_STORE_CONNECT_KEY_IDENTIFIER'], 'typ': 'JWT'})
