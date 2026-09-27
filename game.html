@@ -39,6 +39,7 @@ button,input,select{font:inherit;color:inherit}
 .wrap{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
 header.top .wrap{padding-block:0}
 body{padding-top:env(safe-area-inset-top,0px)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60;pointer-events:none}
+.flist{display:flex;flex-direction:column}.fitem{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}.fitem>div:first-child{min-width:0}.fitem.off{opacity:.55}.fitem.own b{color:var(--accent)}.fbuy{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}.fbuy .num{font-family:var(--mono);font-size:13px}.fkpis{grid-template-columns:repeat(4,1fr)}@media (max-width:700px){.kpis.fkpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:2px solid var(--ink)}
 .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding-block:10px 8px}
 .brand{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.03em;text-transform:uppercase;line-height:1}
@@ -871,7 +872,42 @@ function playerFV(){
   return Math.max(Math.max(0,book)*.25,fv,1000);
 }
 function sharePrice(){const q=state.eq;return q.pub?q.price:playerFV()/q.shares;}
-function netWorth(){const me=state.me;const own=state.eq.own*sharePrice();const hold=Object.keys(me.hold).reduce((a,id)=>{const rv=rvById(id);return a+(rv&&rv.active?me.hold[id].n*rv.price:0);},0);return {cash:me.cash,own,hold,total:me.cash+own+hold};}
+function netWorth(){const me=state.me;const own=state.eq.own*sharePrice();const hold=Object.keys(me.hold).reduce((a,id)=>{const rv=rvById(id);return a+(rv&&rv.active?me.hold[id].n*rv.price:0);},0);const prop=propValue();return {cash:me.cash,own,hold,prop,total:me.cash+own+hold+prop};}
+
+/* ----- personal fortune: things to buy and gifts ----- */
+const OWNER_FIRST=['Henry','Walter','Charles','Edward','Frederick','Arthur','Howard','Samuel','Josiah','Cornelius','Thomas','George','Horace','Elias','Margaret','Eleanor','Harriet','Clara','Edith','Florence'];
+const OWNER_LAST=['Whitcomb','Ashby','Hollister','Pruitt','Calloway','Remington','Stanhope','Beaumont','Talmadge','Kensington','Fairbanks','Lockhart','Pemberton','Vance','Harwood','Ellsworth','Sinclair','Morrow','Dunmore','Radcliffe'];
+const ownerName=()=>state.owner&&state.owner.last?state.owner.first+' '+state.owner.last:'the founder';
+const ownerLast=()=>state.owner&&state.owner.last?state.owner.last:'Founder';
+// cost in 1900 dollars (scaled by the cost index); keep = share of the price it is still worth
+const LUX=[
+ {id:'townhouse',kind:'home',name:'Town house',d:'A fine brick house in '+'your headquarters city.',cost:20000,keep:.8},
+ {id:'mansion',kind:'home',name:'Mansion',d:'Forty rooms on the grandest avenue in the city. The place to be seen.',cost:250000,keep:.8,named:'The {L} Mansion'},
+ {id:'cottage',kind:'home',name:'Summer "cottage" at Newport',alt:[1935,'Winter estate in Palm Beach'],d:'Seventy rooms by the sea, used six weeks a year.',cost:150000,keep:.7,named:'{L} Cottage'},
+ {id:'ranch',kind:'home',name:'Western ranch',d:'Ten thousand acres, cattle, and a lodge for hunting parties.',cost:80000,keep:.7,named:'The {L} Ranch'},
+ {id:'yacht',kind:'toy',name:'Steam yacht',alt:[1930,'Motor yacht'],d:'Crewed, with a dining saloon for thirty.',cost:120000,keep:.3,named:'The {F}',boat:true},
+ {id:'railcar',kind:'toy',name:'Private railroad car',d:'Your own car on any train in the country: parlor, bedroom, kitchen and cook.',cost:50000,keep:.2,to:1955,named:'The {L}'},
+ {id:'art',kind:'toy',name:'Art collection',d:'Old masters bought from European estates. Good art holds its value.',cost:100000,keep:1},
+ {id:'stable',kind:'toy',name:'Racing stable',d:'Thoroughbreds, a trainer, and a box at every big race.',cost:40000,keep:.3,named:'{L} Stables'},
+ {id:'plane',kind:'toy',name:'Private airplane',alt:[1955,'Private jet'],d:'Fly to meetings, dealers and the races.',cost:60000,keep:.3,from:1928},
+ {id:'island',kind:'home',name:'Private island',d:'Off the Georgia coast, with a clubhouse for your friends.',cost:500000,keep:.8,named:'{L} Island'}];
+const GIFTS=[
+ {id:'park',name:'Public park',d:'Land and gardens given to the city.',cost:30000,gw:1.5,named:'{L} Park',many:true},
+ {id:'library',name:'Public library',d:'Free to all. A lasting gift to a town.',cost:50000,gw:2,named:'{L} Public Library',many:true},
+ {id:'hall',name:'Concert hall',d:'A home for the city orchestra.',cost:250000,gw:3,named:'{L} Hall',many:true},
+ {id:'hospital',name:'Hospital',d:'Beds, doctors and nurses for the region.',cost:300000,gw:4,named:'{L} Memorial Hospital',many:true},
+ {id:'museum',name:'Museum of art',d:'Your collection and more, open to the public.',cost:400000,gw:4,named:'{L} Museum of Art',many:true},
+ {id:'university',name:'University',d:'Found a university that carries your name for generations.',cost:2000000,gw:8,nat:2,named:'{L} University'},
+ {id:'foundation',name:'Charitable foundation',d:'A permanent fund giving to good causes across the country.',cost:5000000,gw:0,nat:4,named:'The {L} Foundation'}];
+const luxName=(it,Y)=>it.alt&&Y>=it.alt[0]?it.alt[1]:it.name;
+const fillName=t=>t.replace('{L}',ownerLast()).replace('{F}',state.owner&&state.owner.first?state.owner.first:'Founder');
+const luxOK=(it,Y)=>Y>=(it.from||1900)&&Y<(it.to||9999);
+function propValue(){const me=state.me;if(!me||!me.buys) return 0;const Y=yearOf(state.m);return me.buys.filter(b=>b.kind!=='give').reduce((a,b)=>{const it=LUX.find(x=>x.id===b.id);if(!it) return a;const age=(state.m-b.m)/12;const k=it.keep>=.8?it.keep:Math.max(it.keep*.5,it.keep*Math.pow(.93,age));return a+b.paid*k*costIdx(Y)/costIdx(yearOf(b.m));},0);}
+function goodwill(rid){const me=state.me;if(!me||!me.buys) return 0;let g=0;me.buys.forEach(b=>{if(b.kind!=='give') return;const it=GIFTS.find(x=>x.id===b.id);if(!it) return;if(it.nat) g+=it.nat;if(it.gw&&b.rid){const d=b.rid===rid?0:miles(b.rid,rid);g+=it.gw*(d===0?1:d<700?.4:0);}});return Math.min(15,g);}
+const owns=id=>((state.me&&state.me.buys)||[]).some(b=>b.id===id);
+const ownsCount=id=>((state.me&&state.me.buys)||[]).filter(b=>b.id===id).length;
+const givenTotal=()=>((state.me&&state.me.buys)||[]).filter(b=>b.kind==='give').reduce((a,b)=>a+b.paid,0);
+
 function ipoReady(){
   const Y=yearOf(state.m);const H=state.fin.hist.slice(-12);const rev=H.reduce((a,h)=>a+h.rev,0);const net=H.reduce((a,h)=>a+h.net,0);
   const need=150000*costIdx(Y);
@@ -1037,45 +1073,55 @@ const ACH=[
  {id:'first_dealer',pts:10,name:'Shop Window',d:'Sign your first dealer.',t:()=>Object.values(state.dealers).some(d=>d.n>0)},
  {id:'first_sale',pts:10,name:'First Customer',d:'Sell your first car.',t:()=>soldAll()>=1},
  {id:'in_black',pts:10,name:'In the Black',d:'Make a profit for a month.',t:()=>state.fin.hist.some(h=>h.net>0)},
- {id:'sold_1k',pts:15,name:'A Thousand Drivers',d:'Sell 1,000 cars.',t:()=>soldAll()>=1000},
- {id:'sold_100k',pts:25,name:'On Every Street',d:'Sell 100,000 cars.',t:()=>soldAll()>=1e5},
- {id:'sold_1m',pts:40,name:'A Million Motorists',d:'Sell 1,000,000 cars.',t:()=>soldAll()>=1e6},
- {id:'sold_10m',pts:50,name:'Putting America on Wheels',d:'Sell 10,000,000 cars.',t:()=>soldAll()>=1e7},
- {id:'million_month',pts:25,name:'Million-Dollar Month',d:'Earn $1,000,000 net profit in a single month.',t:()=>state.fin.hist.some(h=>h.net>=1e6)},
- {id:'bootstrapped',pts:25,name:'Bootstrapped',d:'Reach 1910 without ever borrowing, starting loan included.',t:()=>yearOf(state.m)>=1910&&!(state.flags||{}).borrowed&&!state.over},
- {id:'debt_free',pts:15,name:'Debt Free',d:'Pay off every loan after borrowing.',t:()=>(state.flags||{}).borrowed&&debt()<=0&&state.m>=12},
- {id:'five_regions',pts:15,name:'Regional Player',d:'Have dealers in 5 regions.',t:()=>Object.values(state.dealers).filter(d=>d.n>0).length>=5},
- {id:'coast_coast',pts:30,name:'Coast to Coast',d:'Have dealers in all 12 regions.',t:()=>REGIONS.every(r=>hasDealers(r.id))},
- {id:'offices',pts:20,name:'Branching Out',d:'Run branch offices in 5 regions.',t:()=>Object.values(state.dealers).filter(d=>d.office==='open').length>=5},
- {id:'three_factories',pts:20,name:'Industrialist',d:'Run 3 factories at once.',t:()=>state.factories.filter(f=>!f.building).length>=3},
- {id:'moving_line',pts:20,name:'The Line Moves',d:'Run a factory on a moving assembly line.',t:()=>state.factories.some(f=>!f.building&&['line','conveyor','transfer','automation'].includes(f.method))},
- {id:'automation',pts:30,name:'Push-Button Plant',d:'Run a factory with automation and computer control.',t:()=>state.factories.some(f=>!f.building&&f.method==='automation')},
- {id:'veteran_crew',pts:15,name:'Old Hands',d:'Keep a crew on the same model for 3 years.',t:()=>state.factories.some(f=>Object.values(f.prod).some(p=>(p.exp||0)>=36))},
- {id:'full_lineup',pts:20,name:'Full Lineup',d:'Sell 6 models at the same time.',t:()=>state.models.filter(x=>x.status==='active').length>=6},
- {id:'critics',pts:25,name:"Critics' Choice",d:'Have a model rated 80 or higher.',t:()=>state.models.some(x=>(x.rating||0)>=80)},
- {id:'household',pts:30,name:'Household Name',d:'Build a nameplate reputation of 75.',t:()=>state.models.some(x=>(x.fame||0)>=75)},
- {id:'dynasty',pts:25,name:'Dynasty',d:'Reach a third generation of one nameplate.',t:()=>state.models.some(x=>{const p=x.parent&&byId(state.models,x.parent);return p&&p.parent;})},
- {id:'pony',pts:20,name:'Pony Express',d:'Sell 10,000 pony cars.',t:()=>soldSeg('pony')>=1e4},
- {id:'compact',pts:20,name:'Small Wonder',d:'Sell 50,000 compacts.',t:()=>soldSeg('compact')>=5e4},
- {id:'race_win',pts:15,name:'Checkered Flag',d:'Win a race or trial.',t:()=>raceWins()>=1},
- {id:'race_legend',pts:30,name:'Racing Legend',d:'Win 25 races or trials.',t:()=>raceWins()>=25},
- {id:'research',pts:20,name:'The Laboratory',d:'Reach research level 5 in any area.',t:()=>RD_IDS.some(k=>rdTier(k)>=5)},
- {id:'full_staff',pts:20,name:'Management Team',d:'Have every department at its top level.',t:()=>STAFF_IDS.every(k=>lv(k)>=3)},
- {id:'ipo',pts:25,name:'Going Public',d:'List your company on the stock exchange.',t:()=>state.eq&&state.eq.pub},
- {id:'split',pts:15,name:'Split Decision',d:'Split your stock.',t:()=>(state.flags||{}).split},
- {id:'dividend',pts:15,name:'Shareholder Value',d:'Pay a dividend.',t:()=>state.eq&&state.eq.lastDps>0},
- {id:'investor',pts:15,name:'Investor',d:'Own shares in another carmaker.',t:()=>state.me&&Object.keys(state.me.hold).length>0},
- {id:'millionaire',pts:20,name:'Millionaire',d:'Reach a personal net worth of $1,000,000.',t:()=>state.me&&netWorth().total>=1e6},
- {id:'tycoon',pts:40,name:'Tycoon',d:'Reach a personal net worth of $100,000,000.',t:()=>state.me&&netWorth().total>=1e8},
- {id:'takeover',pts:25,name:'Hostile Intentions',d:'Buy another carmaker.',t:()=>state.rivals.some(r=>r.owner==='player')},
- {id:'absorb',pts:20,name:'One Big Family',d:'Absorb a rival into your own brand.',t:()=>state.rivals.some(r=>r.absorbed)},
- {id:'holding',pts:30,name:'Holding Company',d:'Own 3 carmakers at the same time.',t:()=>state.rivals.filter(r=>r.owner==='player'&&r.active).length>=3},
- {id:'trustbuster',pts:20,name:"Trust-Buster's Target",d:'Draw a federal antitrust investigation.',t:()=>state.anti&&state.anti.stage>0},
- {id:'number_one',pts:40,name:'Number One',d:'Outsell every other car company over 12 months.',t:()=>state.m%3===0&&marketLeader()},
- {id:'gov_contract',pts:20,name:'Government Issue',d:'Accept a government vehicle contract.',t:()=>(state.flags||{}).gov},
- {id:'war_work',pts:15,name:'Arsenal of Democracy',d:'Put lines on war work.',t:()=>state.factories.some(f=>(f.war||0)>0)},
- {id:'survive_crash',pts:30,name:'Weathered the Storm',d:'Still be in business in 1934.',t:()=>yearOf(state.m)>=1934&&!state.over&&soldAll()>0},
- {id:'end_era',pts:50,name:'The End of an Era',d:'Reach December 1970 still in business.',t:()=>state.m>=FULL_END_M&&!state.over}
+ {id:'sold_1k',pts:10,name:'A Thousand Drivers',d:'Sell 1,000 cars.',t:()=>soldAll()>=1000},
+ {id:'sold_100k',pts:20,name:'On Every Street',d:'Sell 100,000 cars.',t:()=>soldAll()>=1e5},
+ {id:'sold_1m',pts:30,name:'A Million Motorists',d:'Sell 1,000,000 cars.',t:()=>soldAll()>=1e6},
+ {id:'sold_10m',pts:45,name:'Putting America on Wheels',d:'Sell 10,000,000 cars.',t:()=>soldAll()>=1e7},
+ {id:'million_month',pts:20,name:'Million-Dollar Month',d:'Earn $1,000,000 net profit in a single month.',t:()=>state.fin.hist.some(h=>h.net>=1e6)},
+ {id:'bootstrapped',pts:20,name:'Bootstrapped',d:'Reach 1910 without ever borrowing, starting loan included.',t:()=>yearOf(state.m)>=1910&&!(state.flags||{}).borrowed&&!state.over},
+ {id:'debt_free',pts:10,name:'Debt Free',d:'Pay off every loan after borrowing.',t:()=>(state.flags||{}).borrowed&&debt()<=0&&state.m>=12},
+ {id:'five_regions',pts:10,name:'Regional Player',d:'Have dealers in 5 regions.',t:()=>Object.values(state.dealers).filter(d=>d.n>0).length>=5},
+ {id:'coast_coast',pts:25,name:'Coast to Coast',d:'Have dealers in all 12 regions.',t:()=>REGIONS.every(r=>hasDealers(r.id))},
+ {id:'offices',pts:15,name:'Branching Out',d:'Run branch offices in 5 regions.',t:()=>Object.values(state.dealers).filter(d=>d.office==='open').length>=5},
+ {id:'three_factories',pts:15,name:'Industrialist',d:'Run 3 factories at once.',t:()=>state.factories.filter(f=>!f.building).length>=3},
+ {id:'moving_line',pts:15,name:'The Line Moves',d:'Run a factory on a moving assembly line.',t:()=>state.factories.some(f=>!f.building&&['line','conveyor','transfer','automation'].includes(f.method))},
+ {id:'automation',pts:25,name:'Push-Button Plant',d:'Run a factory with automation and computer control.',t:()=>state.factories.some(f=>!f.building&&f.method==='automation')},
+ {id:'veteran_crew',pts:10,name:'Old Hands',d:'Keep a crew on the same model for 3 years.',t:()=>state.factories.some(f=>Object.values(f.prod).some(p=>(p.exp||0)>=36))},
+ {id:'full_lineup',pts:15,name:'Full Lineup',d:'Sell 6 models at the same time.',t:()=>state.models.filter(x=>x.status==='active').length>=6},
+ {id:'critics',pts:20,name:"Critics' Choice",d:'Have a model rated 80 or higher.',t:()=>state.models.some(x=>(x.rating||0)>=80)},
+ {id:'household',pts:25,name:'Household Name',d:'Build a nameplate reputation of 75.',t:()=>state.models.some(x=>(x.fame||0)>=75)},
+ {id:'dynasty',pts:20,name:'Dynasty',d:'Reach a third generation of one nameplate.',t:()=>state.models.some(x=>{const p=x.parent&&byId(state.models,x.parent);return p&&p.parent;})},
+ {id:'pony',pts:15,name:'Pony Express',d:'Sell 10,000 pony cars.',t:()=>soldSeg('pony')>=1e4},
+ {id:'compact',pts:15,name:'Small Wonder',d:'Sell 50,000 compacts.',t:()=>soldSeg('compact')>=5e4},
+ {id:'race_win',pts:10,name:'Checkered Flag',d:'Win a race or trial.',t:()=>raceWins()>=1},
+ {id:'race_legend',pts:25,name:'Racing Legend',d:'Win 25 races or trials.',t:()=>raceWins()>=25},
+ {id:'research',pts:15,name:'The Laboratory',d:'Reach research level 5 in any area.',t:()=>RD_IDS.some(k=>rdTier(k)>=5)},
+ {id:'full_staff',pts:15,name:'Management Team',d:'Have every department at its top level.',t:()=>STAFF_IDS.every(k=>lv(k)>=3)},
+ {id:'ipo',pts:20,name:'Going Public',d:'List your company on the stock exchange.',t:()=>state.eq&&state.eq.pub},
+ {id:'split',pts:10,name:'Split Decision',d:'Split your stock.',t:()=>(state.flags||{}).split},
+ {id:'dividend',pts:10,name:'Shareholder Value',d:'Pay a dividend.',t:()=>state.eq&&state.eq.lastDps>0},
+ {id:'investor',pts:10,name:'Investor',d:'Own shares in another carmaker.',t:()=>state.me&&Object.keys(state.me.hold).length>0},
+ {id:'millionaire',pts:15,name:'Millionaire',d:'Reach a personal net worth of $1,000,000.',t:()=>state.me&&netWorth().total>=1e6},
+ {id:'tycoon',pts:30,name:'Tycoon',d:'Reach a personal net worth of $100,000,000.',t:()=>state.me&&netWorth().total>=1e8},
+ {id:'takeover',pts:20,name:'Hostile Intentions',d:'Buy another carmaker.',t:()=>state.rivals.some(r=>r.owner==='player')},
+ {id:'absorb',pts:15,name:'One Big Family',d:'Absorb a rival into your own brand.',t:()=>state.rivals.some(r=>r.absorbed)},
+ {id:'holding',pts:25,name:'Holding Company',d:'Own 3 carmakers at the same time.',t:()=>state.rivals.filter(r=>r.owner==='player'&&r.active).length>=3},
+ {id:'trustbuster',pts:15,name:"Trust-Buster's Target",d:'Draw a federal antitrust investigation.',t:()=>state.anti&&state.anti.stage>0},
+ {id:'number_one',pts:30,name:'Number One',d:'Outsell every other car company over 12 months.',t:()=>state.m%3===0&&marketLeader()},
+ {id:'gov_contract',pts:15,name:'Government Issue',d:'Accept a government vehicle contract.',t:()=>(state.flags||{}).gov},
+ {id:'war_work',pts:10,name:'Arsenal of Democracy',d:'Put lines on war work.',t:()=>state.factories.some(f=>(f.war||0)>0)},
+ {id:'survive_crash',pts:25,name:'Weathered the Storm',d:'Still be in business in 1934.',t:()=>yearOf(state.m)>=1934&&!state.over&&soldAll()>0},
+ {id:'first_home',pts:10,name:'Moving Up',d:'Buy a home with your own money.',t:()=>((state.me||{}).buys||[]).some(b=>{const it=LUX.find(x=>x.id===b.id);return it&&it.kind==='home';})},
+ {id:'gilded',pts:20,name:'The Gilded Age',d:'Own a mansion, a summer home and a yacht at the same time.',t:()=>owns('mansion')&&owns('cottage')&&owns('yacht')},
+ {id:'railcar',pts:10,name:'Rolling Palace',d:'Buy your own private railroad car.',t:()=>owns('railcar')},
+ {id:'spender',pts:20,name:'Conspicuous Consumption',d:'Own six different luxuries.',t:()=>new Set(((state.me||{}).buys||[]).filter(b=>b.kind==='lux').map(b=>b.id)).size>=6},
+ {id:'patron',pts:10,name:'Patron',d:'Make your first gift to the public.',t:()=>givenTotal()>0},
+ {id:'libraries',pts:20,name:'Free to All',d:'Fund 5 public libraries.',t:()=>ownsCount('library')>=5},
+ {id:'university',pts:30,name:'Alma Mater',d:'Found a university that carries your name.',t:()=>owns('university')},
+ {id:'benefactor',pts:30,name:'Great Benefactor',d:'Give away $10,000,000 in all.',t:()=>givenTotal()>=1e7},
+ {id:'ten_million',pts:20,name:'Ten Million',d:'Reach a personal net worth of $10,000,000.',t:()=>state.me&&netWorth().total>=1e7},
+ {id:'billionaire',pts:40,name:'Billionaire',d:'Reach a personal net worth of $1,000,000,000.',t:()=>state.me&&netWorth().total>=1e9},
+ {id:'end_era',pts:45,name:'The End of an Era',d:'Reach December 1970 still in business.',t:()=>state.m>=FULL_END_M&&!state.over}
 ];
 function achLife(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return {};}}
 function nativeReport(id){try{
@@ -1087,7 +1133,7 @@ function checkAch(){
   if(!state) return;const got=state.ach||(state.ach={});const life=achLife();let changed=false;
   ACH.forEach(a=>{if(got[a.id]!=null) return;let ok=false;try{ok=!!a.t();}catch(e){}
     if(ok){got[a.id]=state.m;(ui.achNew||(ui.achNew=[])).push(a.name);addNews('Achievement unlocked: '+a.name+'. '+a.d,'good');if(!life[a.id]){life[a.id]=Date.now();changed=true;}nativeReport(a.id);}});
-  if(changed) try{localStorage.setItem(ACH_KEY,JSON.stringify(life));}catch(e){}
+  if(changed) try{const j=JSON.stringify(life);localStorage.setItem(ACH_KEY,j);backup(ACH_KEY,j);}catch(e){}
   Object.keys(life).forEach(id=>nativeReport(id));
 }
 /* ================= state ================= */
@@ -1243,13 +1289,13 @@ function autoSucName(par,spec){let mo=6;try{mo=designMonths(computeCar(withRd(sp
 const START_CAPITAL=25000;
 const SALVAGE=.2;
 function scrapCalc(mid,r){const S=state.stock[mid]||{};const regs=r==='all'?Object.keys(S):[r];let u=0,c=0;regs.forEach(k=>{if(S[k]){u+=S[k].u;c+=S[k].u*S[k].c;}});return {regs,u,cost:c,salvage:c*SALVAGE,loss:c*(1-SALVAGE)};}
-function newGame(name,home,loan){
+function newGame(name,home,loan,owner){
   loan=clamp(loan||0,0,maxLoan(1900));
   state={v:1,m:0,rng:(Date.now()&0x7fffffff)|1,
     company:{name,cash:START_CAPITAL+loan,loan,rep:1,home},staff:{books:0,factory:0,sales:0,market:0,eng:0},rd:{staff:{engine:0,light:0,rel:0,coach:0},pts:{engine:0,light:0,rel:0,coach:0}},regRep:{[home]:10},repV2:true,
     factories:[],dealers:{},
     projects:[],models:[],stock:{},rivals:initRivals(),races:{entries:{},results:[]},
-    fin:{hist:[],qtd:0,taxPaid:0},flags:{borrowed:loan>0},ach:{},me:{cash:0,hold:{},hist:[]},eq:{pub:false,shares:IPO_SHARES,own:IPO_SHARES,price:0,phist:[],payout:0},mkt:{sent:.9,idx:100,hist:[]},news:[],lastDemand:{},market:null,nextId:1,over:false,insolvent:0,endShown:false};
+    owner:owner||{first:'Henry',last:'Whitcomb'},fin:{hist:[],qtd:0,taxPaid:0},flags:{borrowed:loan>0},ach:{},me:{cash:0,hold:{},hist:[],buys:[]},eq:{pub:false,shares:IPO_SHARES,own:IPO_SHARES,price:0,phist:[],payout:0},mkt:{sent:.9,idx:100,hist:[]},news:[],lastDemand:{},market:null,nextId:1,over:false,insolvent:0,endShown:false};
   updateRivals(0,false);
   // established rivals: back-date their current models so they are already on the road
   let k=0;
@@ -1276,8 +1322,12 @@ function estimateUnitCost(mdl,f,m){
   const cap=capPerLine(Y)*meth(f).cap*Math.max(1,f.lines);const ovh=factoryFixed(f.lines,Y,meth(f))/Math.max(1,cap*.8);
   return {mat,lab,ovh,total:mat+lab+ovh};
 }
-function save(){try{checkAch();}catch(e){}try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch(e){}}
-function migrate(p){if(!FREE&&p.m<FULL_END_M) p.endShown=false;if(!p.flags) p.flags={borrowed:(p.company&&(p.company.loan>0||p.company.emLoan>0))||(p.fin&&p.fin.hist||[]).some(h=>h.borrowed>0)};if(!p.ach) p.ach={};if(!p.me) p.me={cash:0,hold:{},hist:[]};if(!p.eq) p.eq={pub:false,shares:IPO_SHARES,own:IPO_SHARES,price:0,phist:[],payout:0};if(!p.mkt) p.mkt={sent:interp(SENT,yearOf(p.m)),idx:100,hist:[]};
+// In the iPhone app, saves are also kept in the app's own storage, which iOS never clears to free space.
+let _npref;function NPREF(){if(_npref!==undefined) return _npref;_npref=null;try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()) _npref=(C.Plugins&&C.Plugins.Preferences)||(C.registerPlugin&&C.registerPlugin('Preferences'))||null;}catch(e){}return _npref;}
+function backup(k,v){const p=NPREF();if(!p) return;try{(v==null?p.remove({key:k}):p.set({key:k,value:v})).catch(()=>{});}catch(e){}}
+async function restoreBackup(){const p=NPREF();if(!p) return false;let got=false;try{for(const k of [ACH_KEY,SAVE_KEY]){if(localStorage.getItem(k)) continue;const r=await p.get({key:k});if(r&&r.value){localStorage.setItem(k,r.value);got=got||k===SAVE_KEY;}}}catch(e){}return got;}
+function save(){try{checkAch();}catch(e){}try{const j=JSON.stringify(state);localStorage.setItem(SAVE_KEY,j);backup(SAVE_KEY,j);}catch(e){}}
+function migrate(p){if(!FREE&&p.m<FULL_END_M) p.endShown=false;if(!p.flags) p.flags={borrowed:(p.company&&(p.company.loan>0||p.company.emLoan>0))||(p.fin&&p.fin.hist||[]).some(h=>h.borrowed>0)};if(!p.ach) p.ach={};if(!p.me) p.me={cash:0,hold:{},hist:[]};if(!p.me.buys) p.me.buys=[];if(!p.eq) p.eq={pub:false,shares:IPO_SHARES,own:IPO_SHARES,price:0,phist:[],payout:0};if(!p.mkt) p.mkt={sent:interp(SENT,yearOf(p.m)),idx:100,hist:[]};
   if(p.rivals){const have=p.rivals.map(r=>r.id);initRivals().forEach(r=>{if(!have.includes(r.id)){const d=byId(RIVAL_DEFS,r.id);if(d.start<=p.m) r.silent=true;p.rivals.push(r);}});
     p.rivals.forEach(rv=>{if(rv.owner===undefined) rv.owner=null;if(!rv.fin) rv.fin=[];if(rv.active&&!rv.shares){const models=rv.models;rivalStart(rv,p.m,false);rv.models=models;const Y=yearOf(p.m);let rev=0,vc=0,u=0;models.forEach(rm=>{const n=rm.sales||0;u+=n;rev+=n*rm.price;vc+=n*rivalVarCost(rm,rv,Y);});for(let i=12;i>=1;i--){const pre=rev*.82-vc-rivalFixed(rv,Y);rv.fin.push({m:p.m-i,rev,net:pre-Math.max(0,pre)*taxRate(Y),units:u});}}});}
 if(p.races&&!p.races.mine){p.races.mine=(p.races.results||[]).filter(r=>r.n).map(r=>Object.assign({},r));}if(!p.yearNames){(p.models||[]).forEach(x=>{if(x.parent&&/ (II|III|IV|V|VI|VII|VIII)$/.test(x.name)){const nn=x.name.replace(/ (II|III|IV|V|VI|VII|VIII)$/,'')+" '"+String(Math.floor(yearOf(x.launchM!=null?x.launchM:p.m))).slice(2);if(!(p.models||[]).some(o=>o.name===nn)) x.name=nn;}});(p.projects||[]).forEach(q=>{if(q.replaces&&/ (II|III|IV|V|VI|VII|VIII)$/.test(q.name)){q.name=q.name.replace(/ (II|III|IV|V|VI|VII|VIII)$/,'')+" '"+String(Math.floor(yearOf(p.m+q.monthsLeft))).slice(2);}});p.yearNames=true;}(p.models||[]).forEach(x=>{if(x.fame==null) x.fame=Math.min(35,(x.life&&x.life.sold||0)/6);});if(p.races&&p.races.entries){Object.keys(p.races.entries).forEach(k=>{if(k.split('-').length<3){const fee=(p.races.fees||{})[k]||0;p.company.cash+=fee;delete p.races.entries[k];}});}if(p.company&&p.company.emLoan==null) p.company.emLoan=0;if(p.rd&&!p.rd.staff){p.rd.staff={engine:0,light:0,rel:0,coach:0};const L=(p.staff&&p.staff.rd)||0;if(L&&p.rd.focus) p.rd.staff[p.rd.focus]=L;}if(p.staff) delete p.staff.rd;if(p.staff&&p.staff.eng==null) p.staff.eng=0;if(!p.rd) p.rd={staff:{engine:0,light:0,rel:0,coach:0},pts:{engine:0,light:0,rel:0,coach:0}};if(!p.races) p.races={entries:{},results:[]};if(p.rivals){const have=p.rivals.map(r=>r.id);const fresh=initRivals();fresh.forEach(r=>{if(!have.includes(r.id)) p.rivals.push(r);});}Object.keys(p.dealers||{}).forEach(r=>{const d=p.dealers[r];if(d.graceUntil==null&&d.n>0){const hadStock=(p.models||[]).some(x=>(x.hist||[]).length&&p.lastSales&&p.lastSales[x.id]&&p.lastSales[x.id][r]&&p.lastSales[x.id][r].sold>0);if(!hadStock){d.graceUntil=p.m+1;if(d.last&&d.last.parts){d.last.parts.stock=0;d.last.parts.volume=0;d.last.note='These dealers are new to your line. They will give you a couple of months for the first cars to arrive before judging stock and sales.';}}}});if(!p.staff) p.staff={books:0,factory:0,sales:0,market:0};if(p.branches&&!p.dealers){p.dealers={};Object.keys(p.branches).forEach(r=>{const n=Math.max(1,Math.round(p.branches[r].cov*dealerSlots(r,yearOf(p.m))));p.dealers[r]={n,target:n,margin:.2,sat:60,office:'none',officeLeft:0,last:null};});delete p.branches;}Object.values(p.factories||{}).forEach(f=>Object.values(f.prod||{}).forEach(pr=>{pr.target=Math.min(pr.target,pr.lines*capPerLine(yearOf(p.m)));}));if(!p.regRep||!p.repV2){p.regRep=p.regRep||{};REGIONS.forEach(r=>{const has=p.dealers&&p.dealers[r.id]&&p.dealers[r.id].n>0;p.regRep[r.id]=has?Math.max(p.regRep[r.id]||0,p.company.rep):2;});p.repV2=true;}(p.models||[]).forEach(x=>{const L=x.life;if(L.design==null){L.dealer=0;L.cogs=0;L.storage=0;(x.hist||[]).forEach(h=>{L.dealer+=h.dealer||0;L.cogs+=h.cogs||0;L.storage+=h.storage||0;});L.design=designCost(x.car,x.dy);L.profit-=L.design;}});return p;}
@@ -1502,9 +1552,9 @@ function simMonth(){
   const missRate=demTot?missTot/demTot:0;const missPen=Math.max(0,missRate-.1)*50;
   state.fin.missRate=missRate;state.fin.missPen=missPen;
   REGIONS.forEach(r=>{const R=mk.regions[r.id];const cur=regRep(r.id);const dem=R.ourSold+R.ourMissed;
-    if(R.ourSold>0){const sh=R.totalSold?R.ourSold/R.totalSold:0;const mp=Math.max(0,R.ourMissed/dem-.1)*50;const t=clamp(.7*(R.scoreW/R.ourSold)+30*Math.min(1,sh*4)-mp,5,95);state.regRep[r.id]=cur+(t-cur)*.06;}
-    else if(dem>0){state.regRep[r.id]=cur+(Math.max(5,cur-10)-cur)*.06;}
-    else state.regRep[r.id]=cur+(0-cur)*.01;});
+    if(R.ourSold>0){const sh=R.totalSold?R.ourSold/R.totalSold:0;const mp=Math.max(0,R.ourMissed/dem-.1)*50;const t=clamp(.7*(R.scoreW/R.ourSold)+30*Math.min(1,sh*4)-mp+goodwill(r.id),5,97);state.regRep[r.id]=cur+(t-cur)*.06;}
+    else if(dem>0){state.regRep[r.id]=cur+(Math.max(5,cur-10)+goodwill(r.id)-cur)*.06;}
+    else state.regRep[r.id]=cur+(goodwill(r.id)-cur)*.01;});
   {const rwN=regWeights(Y);C.rep=REGIONS.reduce((a,r)=>a+rwN[r.id]*regRep(r.id),0);}
   // solvency
   if(C.cash<0){const room=Math.max(0,maxLoan(Y)-debt());const need=-C.cash;const take=Math.min(room,need);
@@ -1590,7 +1640,7 @@ function render(){
   if(!state){renderStart();return;}
   const C=state.company,Y=yearOf(state.m);
   const last=state.fin.hist[state.fin.hist.length-1];
-  const tabs=[['overview','Overview'],['models','Models'],['design','Design'],['factories','Factories'],['regions','Regions'],['market','Market'],['racing','Racing'],['finance','Finance'],['stocks','Stocks'],['staff','Staff'],['news','News']];
+  const tabs=[['overview','Overview'],['models','Models'],['design','Design'],['factories','Factories'],['regions','Regions'],['market','Market'],['racing','Racing'],['finance','Finance'],['stocks','Stocks'],['fortune','Fortune'],['staff','Staff'],['news','News']];
   let h='<header class="top"><div class="wrap"><div class="topbar">'+
     '<div class="brand">'+esc(C.name)+'<small>Motor Baron'+(FREE?': 1900':'')+'</small></div>'+
     '<div class="date">'+dateLabel(state.m)+'</div><div class="brk"></div>'+
@@ -1605,7 +1655,7 @@ function render(){
       '<button class="btn primary" data-act="end" '+(state.over||state.m>=END_M?'disabled':'')+'>End '+MON3[state.m%12]+' '+Math.floor(Y)+' ›</button>'+
     '</div></div>'+
     '<nav class="tabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('')+'</nav></div></header>';
-  h+='<main class="wrap">'+(ui.achNew&&ui.achNew.length?'<div class="achbar" role="status"><span class="medal"></span><div><b>Achievement unlocked</b><div class="small">'+ui.achNew.map(esc).join(' · ')+'</div></div><button class="btn small" data-act="achclose">OK</button></div>':'')+(ui.toast?'<div class="toast" role="status"><span class="chip good">Done</span><div><b>'+ui.toast.title+'</b><div class="small">'+ui.toast.text+'</div></div><button class="btn small" data-act="closetoast" aria-label="Dismiss">OK</button></div>':'')+({overview:viewOverview,models:viewModels,design:viewDesign,factories:viewFactories,regions:viewRegions,market:viewMarket,racing:viewRacing,finance:viewFinance,stocks:viewStocks,staff:viewStaff,news:viewNews}[ui.tab])()+'</main>';
+  h+='<main class="wrap">'+(ui.achNew&&ui.achNew.length?'<div class="achbar" role="status"><span class="medal"></span><div><b>Achievement unlocked</b><div class="small">'+ui.achNew.map(esc).join(' · ')+'</div></div><button class="btn small" data-act="achclose">OK</button></div>':'')+(ui.toast?'<div class="toast" role="status"><span class="chip good">Done</span><div><b>'+ui.toast.title+'</b><div class="small">'+ui.toast.text+'</div></div><button class="btn small" data-act="closetoast" aria-label="Dismiss">OK</button></div>':'')+({overview:viewOverview,models:viewModels,design:viewDesign,factories:viewFactories,regions:viewRegions,market:viewMarket,racing:viewRacing,finance:viewFinance,stocks:viewStocks,fortune:viewFortune,staff:viewStaff,news:viewNews}[ui.tab])()+'</main>';
   h+='<div class="endbar"><button class="btn" data-act="undo" '+(ui.prev?'':'disabled')+'>Undo</button><button class="btn primary" data-act="end" '+(state.over||state.m>=END_M?'disabled':'')+'>End '+MON3[state.m%12]+' '+Math.floor(Y)+' ›</button></div>';
   h+=renderModal();
   const y=window.scrollY;const _tw=[...app.querySelectorAll('.tablewrap')].map(e=>e.scrollLeft);const _nv=app.querySelector('nav.tabs');const _nx=_nv?_nv.scrollLeft:0;app.innerHTML=h;document.body.classList.toggle('has-dbar',!!app.querySelector('#dbar'));{const tw=app.querySelectorAll('.tablewrap');_tw.forEach((v,k)=>{if(tw[k]&&v) tw[k].scrollLeft=v;});}{const nv=app.querySelector('nav.tabs');if(nv){nv.scrollLeft=_nx;const on=nv.querySelector('[aria-selected="true"]');if(on){const l=on.getBoundingClientRect().left-nv.getBoundingClientRect().left+nv.scrollLeft,r=l+on.offsetWidth;if(l<nv.scrollLeft||r>nv.scrollLeft+nv.clientWidth) nv.scrollLeft=Math.max(0,l-(nv.clientWidth-on.offsetWidth)/2);}}}{const re=app.querySelector('.regexp-in');if(re){const w=re.closest('.tablewrap');if(w) re.style.setProperty('--regw',w.clientWidth+'px');}}{const hd=app.querySelector("header.top");if(hd&&getComputedStyle(hd).position==="sticky") document.documentElement.style.setProperty("--hdr",hd.offsetHeight+"px");else document.documentElement.style.setProperty("--hdr","0px");}window.scrollTo(0,y);
@@ -2159,6 +2209,33 @@ function viewStocks(){
   return h;
 }
 
+
+/* ----- fortune ----- */
+function viewFortune(){
+  const Y=yearOf(state.m);const me=state.me;const nw=netWorth();const ci=costIdx(Y);const given=givenTotal();
+  let h='';
+  h+='<section class="panel"><div class="panel-head"><h2>'+esc(state.owner?ownerName():'Your fortune')+'</h2><button class="btn small" data-act="owneropen">'+(state.owner?'Change name':'Enter your name')+'</button></div>'+
+    '<div class="kpis fkpis"><div class="kpi"><label>Net worth</label><b>'+money(nw.total)+'</b><span>Your score</span></div><div class="kpi"><label>Personal cash</label><b>'+money(me.cash)+'</b><span>Yours to spend</span></div><div class="kpi"><label>Homes and belongings</label><b>'+money(nw.prop)+'</b><span>What they would sell for</span></div><div class="kpi"><label>Given away</label><b>'+money(given)+'</b><span>'+(given?'Lasting goodwill':'Nothing yet')+'</span></div></div>'+
+    '<p class="hint">Personal cash comes from dividends (set one on the Stocks tab), dividends from shares you own, or selling shares. Company cash cannot be spent here.</p></section>';
+  const row=(it,price,btn,sub,own)=>'<div class="fitem'+(own?' own':'')+'"><div><b>'+esc(it)+'</b><div class="small muted">'+sub+'</div></div><div class="fbuy"><span class="num">'+money(price)+'</span>'+btn+'</div></div>';
+  h+='<section class="panel"><div class="panel-head"><h2>Live like a baron</h2><span class="muted small">Homes keep most of their value. Boats, planes and horses lose it.</span></div><div class="flist">';
+  LUX.forEach(it=>{const nm=luxName(it,Y);const b=me.buys.find(x=>x.id===it.id);
+    if(b){h+=row(b.nm||nm,0,'<span class="chip good">Owned</span>','Bought '+dateShort(b.m)+' for '+money(b.paid)+(b.nm&&b.nm!==nm?' · '+esc(nm):''),true).replace('<span class="num">'+money(0)+'</span>','');return;}
+    if(!luxOK(it,Y)){if((it.from||0)>Y) h+='<div class="fitem off"><div><b>'+esc(nm)+'</b><div class="small muted">Not until '+it.from+'</div></div></div>';return;}
+    const price=Math.round(it.cost*ci/100)*100;const can=me.cash>=price;
+    h+=row(nm,price,'<button class="btn small'+(can?' primary':'')+'" data-act="buyopen" data-id="'+it.id+'" '+(can?'':'disabled')+'>'+(can?'Buy':'Need '+money(price-me.cash)+' more')+'</button>',it.d);});
+  h+='</div></section>';
+  h+='<section class="panel"><div class="panel-head"><h2>Give it away</h2><span class="muted small">Gifts carry your name and lift your reputation for good: most in the region you choose, some nearby.</span></div><div class="flist">';
+  GIFTS.forEach(it=>{const n=ownsCount(it.id);const once=!it.many;const price=Math.round(it.cost*ci/1000)*1000;const can=me.cash>=price;
+    const eff=(it.gw?'Reputation +'+it.gw+' in one region':'')+(it.nat?(it.gw?', ':'')+'+'+it.nat+' everywhere':'');
+    if(once&&n){const b=me.buys.find(x=>x.id===it.id);h+=row(b.nm,0,'<span class="chip good">Founded</span>','Founded '+dateShort(b.m)+' with '+money(b.paid),true).replace('<span class="num">'+money(0)+'</span>','');return;}
+    h+=row(it.name,price,'<button class="btn small'+(can?' primary':'')+'" data-act="buyopen" data-id="'+it.id+'" '+(can?'':'disabled')+'>'+(can?'Give':'Need '+money(price-me.cash)+' more')+'</button>',it.d+' '+eff+'.'+(n?' You have funded '+n+'.':''));});
+  h+='</div></section>';
+  const gifts=me.buys.filter(b=>b.kind==='give');
+  if(gifts.length) h+='<section class="panel"><h2>Your legacy</h2><div class="flist">'+gifts.slice().reverse().map(b=>{const r=REGIONS.find(x=>x.id===b.rid);return '<div class="fitem"><div><b>'+esc(b.nm)+'</b><div class="small muted">'+(r?esc(r.city)+' · ':'')+dateShort(b.m)+'</div></div><div class="fbuy"><span class="num">'+money(b.paid)+'</span></div></div>';}).join('')+'</div></section>';
+  return h;
+}
+
 /* ----- news ----- */
 function viewNews(){
   return '<section class="panel"><h2>News</h2><div class="news">'+state.news.map(n=>'<div><time>'+dateShort(n.m)+'</time><span>'+(n.kind==='bad'||n.kind==='warn'||n.kind==='rival'?'<span class="chip '+(n.kind==='rival'?'warn':n.kind)+'">'+(n.kind==='rival'?'Rival':n.kind==='bad'?'Alert':'Watch')+'</span> ':'')+esc(n.text)+'</span></div>').join('')+'</div></section>';
@@ -2167,6 +2244,8 @@ function viewNews(){
 /* ----- start + modals ----- */
 function renderStart(){
   app.innerHTML='<main class="wrap" style="max-width:620px;padding-top:48px"><section class="panel" style="gap:16px"><div class="eyebrow">January 1900'+(FREE?' · Free edition':'')+'</div><div class="titlecard">Motor Baron</div><p>Start with '+money(START_CAPITAL)+' and an idea. Design your first car, build a factory, and take on carmakers that are already selling. The game runs from 1900 to '+END_YEAR+'.</p>'+
+   '<div class="field"><label>Your name, as the founder</label><div class="row" style="flex-wrap:nowrap"><input id="ng-first" class="txt" placeholder="First name" maxlength="20" value="'+esc(ui.ngFirst||'')+'"><input id="ng-last" class="txt" placeholder="Last name" maxlength="24" value="'+esc(ui.ngLast||'')+'"><button class="btn" data-act="ngpick" title="Pick a name for me">Pick for me</button></div></div>'+
+   '<p class="hint">Libraries, halls and universities you fund later will carry this name.</p>'+
    '<div class="field"><label for="ng-name">Company name</label><input id="ng-name" class="txt" value="Keystone Motor Car Co." maxlength="40"></div>'+
    '<div class="field"><label for="ng-home">Headquarters</label><select id="ng-home" class="sel">'+REGIONS.map(r=>'<option value="'+r.id+'" '+(r.id==='gl'?'selected':'')+'>'+r.name+' ('+r.city+') · wages '+r.wage.toFixed(2)+'×, income '+r.inc.toFixed(2)+'×</option>').join('')+'</select></div>'+
    '<p class="hint">Where your office is. You can build factories and sign dealers anywhere. Rich, dense regions buy more cars; low-wage regions build them for less.</p>'+
@@ -2212,6 +2291,16 @@ function renderModal(){
       if(k==='buyme'){title='Buy more shares';const nn=Math.min(n,q.shares-q.own);const cost=nn*px*1.02;can=state.me.cash>=cost&&nn>0;info='<p>Buy '+int(nn)+' shares with your own money at about '+money(px*1.02)+', costing <b>'+money(cost)+'</b>. Your stake grows to '+pct((q.own+nn)/q.shares)+'.</p>'+(can?'':'<p class="neg small">Not enough personal cash.</p>');}
       info='<div class="field"><label>How much</label><select class="sel" data-chg="mdset" data-k="f">'+opts.map(v=>'<option value="'+v+'" '+(Math.abs(v-fr)<.0001?'selected':'')+'>'+Math.round(v*100)+'% of the company</option>').join('')+'</select></div>'+info;}
     body='<h2>'+title+'</h2><p class="muted small">Share price '+money(px)+' · '+int(q.shares)+' shares</p>'+info+'<div class="row"><button class="btn primary" data-act="eqdo" '+(can?'':'disabled')+'>Confirm</button></div>';}
+  else if(md.type==='owner'){const o=state.owner||{first:'',last:''};body='<h2>Your name</h2><p class="small">The founder of '+esc(state.company.name)+'. Gifts you make from now on carry this name.</p><div class="row" style="flex-wrap:nowrap"><input id="ow-first" class="txt" placeholder="First name" maxlength="20" value="'+esc(o.first)+'"><input id="ow-last" class="txt" placeholder="Last name" maxlength="24" value="'+esc(o.last)+'"></div><div class="row"><button class="btn" data-act="owpick">Pick for me</button><button class="btn primary" data-act="owsave">Save</button></div>';}
+  else if(md.type==='buy'){const Y=yearOf(state.m);const lux=LUX.find(x=>x.id===md.id);const it=lux||GIFTS.find(x=>x.id===md.id);const ci=costIdx(Y);const price=lux?Math.round(it.cost*ci/100)*100:Math.round(it.cost*ci/1000)*1000;
+    if(md.nm==null) md.nm=it.named?fillName(it.named):'';if(!md.rid) md.rid=state.company.home;const can=state.me.cash>=price;
+    body='<h2>'+(lux?'Buy: ':'Give: ')+esc(lux?luxName(it,Y):it.name)+'</h2><p>'+it.d+'</p>'+
+      (it.named?'<div class="field"><label for="buy-nm">'+(lux?'Its name':'Name it')+'</label><input id="buy-nm" class="txt" maxlength="48" value="'+esc(md.nm)+'" data-mdk="nm"></div>':'')+
+      (!lux&&it.gw?'<div class="field"><label for="buy-r">Where</label><select id="buy-r" class="sel" data-chg="mdset" data-k="rid">'+REGIONS.map(r=>'<option value="'+r.id+'" '+(md.rid===r.id?'selected':'')+'>'+r.name+' ('+r.city+')'+(hasDealers(r.id)?'':' · no dealers yet')+'</option>').join('')+'</select><span class="hint">Reputation there rises by '+it.gw+' for good, and a little in nearby regions.'+(it.nat?' Plus '+it.nat+' in every region.':'')+'</span></div>':'')+
+      (!lux&&!it.gw&&it.nat?'<p class="small">Reputation rises by '+it.nat+' in every region, for good.</p>':'')+
+      '<dl class="kv"><dt>Cost</dt><dd><b>'+money(price)+'</b></dd><dt>Your personal cash</dt><dd>'+money(state.me.cash)+'</dd>'+(lux?'<dt>Worth later</dt><dd>'+(it.keep>=.8?'Holds '+Math.round(it.keep*100)+'% of its value':'Loses value every year')+'</dd>':'')+'</dl>'+
+      (can?'':'<div class="alert warn"><span class="chip warn">Can\'t afford</span><span>You need '+money(price-state.me.cash)+' more personal cash.</span></div>')+
+      '<div class="row"><button class="btn primary" data-act="buydo" '+(can?'':'disabled')+'>'+(lux?'Buy for ':'Give ')+money(price)+'</button></div>';}
   else if(md.type==='trade'){const rv=rvById(md.id);const me=state.me;const hold=me.hold[rv.id]||{n:0};const buy=md.side==='buy';const fr=md.f||(buy?.25:.5);
     let n,cost,can=true,note='';
     if(buy){const cap=Math.floor(rv.shares*.49)-hold.n;n=Math.max(0,Math.min(Math.floor(me.cash*fr/(rv.price*1.01)),cap));cost=n*rv.price*1.01;can=n>0;if(cap<=0) note='No shares available to you. You already own 49% of '+esc(rv.name)+', the most one investor can hold. To own more, take it over with your company.';else if(me.cash<rv.price*1.01) note='You don\'t have enough personal cash for even one share ('+money(rv.price*1.01)+'). Company cash can\'t be used here. '+(state.eq&&state.eq.payout>0?'Your dividend pays you each quarter; come back then.':'Set a dividend on your company (Stocks tab) and your share of its profit will be paid to you personally each quarter.');else if(!n) note='That amount doesn\'t buy a single share. Pick a larger share of your cash.';}
@@ -2357,11 +2446,25 @@ const A={
     const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=nm;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);const c=document.getElementById('copy-msg');if(c) c.textContent='Saved '+nm;}catch(e){const c=document.getElementById('copy-msg');if(c) c.textContent='Could not save a file here. Use Copy text instead.';}},
   importopen:()=>{ui.modal={type:'import'};render();},
   newconfirm:()=>{ui.modal={type:'newconfirm'};render();},
-  donew:()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}state=null;ui.modal=null;ui.prev=null;ui.design=null;render();},
-  newgame:()=>{const name=(document.getElementById('ng-name').value||'').trim()||'Keystone Motor Car Co.';const home=document.getElementById('ng-home').value;const loan=+document.getElementById('ng-loan').value||0;newGame(name,home,loan);save();render();},
+  donew:()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}backup(SAVE_KEY,null);state=null;ui.modal=null;ui.prev=null;ui.design=null;render();},
+  ngpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ng-first'),l=document.getElementById('ng-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
+  newgame:()=>{const name=(document.getElementById('ng-name').value||'').trim()||'Keystone Motor Car Co.';const home=document.getElementById('ng-home').value;const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});save();render();},
   copyexport:()=>{const ta=document.getElementById('exp-text');const m=document.getElementById('copy-msg');const done=()=>{if(m) m.textContent='Copied.';};try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';});}catch(e){ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';}},
   doimport:()=>{const t=document.getElementById('imp-text').value;try{const p=JSON.parse(t);if(!p||p.v!==1||!p.company) throw new Error('bad');state=migrate(p);ui.modal=null;ui.prev=null;ui.design=null;save();render();}catch(e){const er=document.getElementById('imp-err');if(er) er.textContent='That text is not a Marque save. Paste the whole export, from the first { to the last }.';}},
   closemodal:()=>{ui.modal=null;render();},
+  owneropen:()=>{ui.modal={type:'owner'};render();},
+  owpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ow-first'),l=document.getElementById('ow-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
+  owsave:()=>{const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const f=cap((document.getElementById('ow-first').value||'').trim()),l=cap((document.getElementById('ow-last').value||'').trim());if(!f||!l){msg('Name needed','Enter a first and last name.');return;}state.owner={first:f,last:l};ui.modal=null;ui.toast={title:'Name saved',text:'You are '+esc(f+' '+l)+', founder of '+esc(state.company.name)+'.'};save();render();},
+  buyopen:el=>{ui.modal={type:'buy',id:el.dataset.id};render();},
+  buydo:()=>{const md=ui.modal;const Y=yearOf(state.m);const lux=LUX.find(x=>x.id===md.id);const it=lux||GIFTS.find(x=>x.id===md.id);const ci=costIdx(Y);const price=lux?Math.round(it.cost*ci/100)*100:Math.round(it.cost*ci/1000)*1000;if(state.me.cash<price) return;
+    const ni=document.getElementById('buy-nm');let nm=ni?(ni.value||'').trim():'';if(it.named&&!nm) nm=fillName(it.named);const rs=document.getElementById('buy-r');const rid=rs?rs.value:(md.rid||state.company.home);
+    state.me.cash-=price;const rec={id:it.id,kind:lux?'lux':'give',m:state.m,paid:price,nm:nm||(lux?luxName(it,Y):it.name)};if(!lux) rec.rid=rid;state.me.buys.push(rec);
+    const who=ownerName();const r=REGIONS.find(x=>x.id===rid);
+    if(lux){addNews(who+' buys '+(it.named?luxName(it,Y).toLowerCase()+', '+nm+',':'a '+luxName(it,Y).toLowerCase())+' for '+money(price)+'.','good');ui.toast={title:(it.named?nm:luxName(it,Y))+' is yours',text:'Paid '+money(price)+' from your personal cash.'};}
+    else{if(it.gw&&r){state.regRep[rid]=clamp(regRep(rid)+it.gw,0,100);}if(it.nat) REGIONS.forEach(x=>{state.regRep[x.id]=clamp(regRep(x.id)+it.nat*.5,0,100);});
+      addNews(who+' gives '+money(price)+' to found '+nm+(it.gw&&r?' in '+r.city:'')+'. The papers are full of praise.','good');ui.toast={title:nm+' is founded',text:'A gift of '+money(price)+'.'+(it.gw&&r?' Your reputation around '+esc(r.name)+' rises for good.':' Your reputation rises everywhere.')};}
+    ui.modal=null;save();render();},
+
   'closemodal-bg':(el,e)=>{if(e.target===el){ui.modal=null;render();}}
 };
 const CHG={
@@ -2394,6 +2497,7 @@ const INP={
 };
 function refreshPreview(){const db=document.getElementById('dbar');if(db){db.innerHTML=designBar();db.classList.remove('flash');void db.offsetWidth;db.classList.add('flash');}const d=ui.design;if(d&&d.autoName&&d.replaces){const par=byId(state.models,d.replaces);if(par){d.name=autoSucName(par,d.spec);const ni=document.getElementById('d-name');if(ni) ni.value=d.name;}}const p=document.getElementById('design-preview');if(p) p.innerHTML=designPreview();}
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el) return;const fn=A[el.dataset.act];if(fn){if(el.tagName==='TR'&&e.target.closest('input,button:not([data-act="selmodel"])')) return;fn(el,e);}});
+document.addEventListener('input',e=>{const el=e.target.closest&&e.target.closest('[data-mdk]');if(el&&ui.modal) ui.modal[el.dataset.mdk]=el.value;});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(el&&CHG[el.dataset.chg]) CHG[el.dataset.chg](el);});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(el&&INP[el.dataset.inp]) INP[el.dataset.inp](el);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ui.modal){ui.modal=null;render();}if(e.key==='Enter'&&e.target.matches('input[data-chg]')) e.target.blur();});
@@ -2404,6 +2508,7 @@ function start(data){
   if(data&&data.state){state=migrate(data.state);ui=Object.assign(ui,data.ui||{});}
   else load();
   render();
+  if(!state) restoreBackup().then(ok=>{if(ok&&!state&&load()) render();});
 }
 try{if(window.claude&&window.claude.hot&&window.claude.hot.snapshot) window.claude.hot.snapshot(()=>({state,ui}));}catch(e){}
 if(window.claude&&window.claude.hot&&window.claude.hot.ready) window.claude.hot.ready(start);
