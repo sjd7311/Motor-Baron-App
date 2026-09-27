@@ -1125,9 +1125,10 @@ const ACH=[
 ];
 function achLife(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return {};}}
 // Game Center on iPhone (full game). The native side is the small MotorBaronGameCenter plugin.
-let _gc,gcIn=false;
+let _gc,gcIn=false,_gcTries=0;
 function GC(){if(_gc!==undefined) return _gc;_gc=null;try{const C=window.Capacitor;if(!FREE&&C&&C.isNativePlatform&&C.isNativePlatform()&&C.registerPlugin) _gc=C.registerPlugin('MotorBaronGameCenter');}catch(e){}return _gc;}
-function gcStart(){const g=GC();if(!g) return;try{g.signIn().then(r=>{gcIn=!!(r&&r.signedIn);if(gcIn){const ids=Object.keys(achLife()).map(i=>'motorbaron.'+i);if(ids.length) g.unlockMany({ids}).catch(()=>{});}}).catch(()=>{});}catch(e){}}
+function gcStart(){const g=GC();if(!g) return;try{g.signIn().then(r=>{gcIn=!!(r&&r.signedIn);if(gcIn){const ids=Object.keys(achLife()).map(i=>'motorbaron.'+i);if(ids.length) g.unlockMany({ids}).catch(()=>{});}else if(_gcTries<5){_gcTries++;setTimeout(gcStart,2000);}}).catch(()=>{if(_gcTries<5){_gcTries++;setTimeout(gcStart,2000);}});}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!gcIn) gcStart();});
 function nativeReport(id){try{const g=GC();if(g&&gcIn) g.unlock({id:'motorbaron.'+id}).catch(()=>{});}catch(e){}}
 function checkAch(){
   if(!state) return;const got=state.ach||(state.ach={});const life=achLife();let changed=false;
@@ -2512,7 +2513,7 @@ function start(data){
   else load();
   render();
   if(!state) restoreBackup().then(ok=>{if(ok&&!state&&load()) render();});
-  gcStart();
+  setTimeout(gcStart,1500);
 }
 try{if(window.claude&&window.claude.hot&&window.claude.hot.snapshot) window.claude.hot.snapshot(()=>({state,ui}));}catch(e){}
 if(window.claude&&window.claude.hot&&window.claude.hot.ready) window.claude.hot.ready(start);

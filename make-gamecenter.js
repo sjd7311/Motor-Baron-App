@@ -64,7 +64,7 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
             GKLocalPlayer.local.authenticateHandler = { [weak self] viewController, error in
                 guard let self = self else { return }
                 if let vc = viewController {
-                    self.bridge?.viewController?.present(vc, animated: true, completion: nil)
+                    self.presentAuth(vc)
                     return
                 }
                 self.finished = true
@@ -75,6 +75,24 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
                     c.resolve(["signedIn": ok, "error": error?.localizedDescription ?? ""])
                 }
             }
+        }
+    }
+
+    // The bridge's view controller may not be on screen yet this early in launch;
+    // presenting then is silently dropped by UIKit. Wait until it's actually visible.
+    private func presentAuth(_ vc: UIViewController, retries: Int = 10) {
+        DispatchQueue.main.async {
+            guard let root = self.bridge?.viewController,
+                  root.viewIfLoaded?.window != nil,
+                  root.presentedViewController == nil else {
+                if retries > 0 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.presentAuth(vc, retries: retries - 1)
+                    }
+                }
+                return
+            }
+            root.present(vc, animated: true, completion: nil)
         }
     }
 
