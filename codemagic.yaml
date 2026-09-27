@@ -40,7 +40,7 @@ workflows:
     integrations:
       app_store_connect: Motor Baron ASC
     environment:
-      node: 20
+      node: 22
       xcode: latest
       vars:
         EDITION: full
