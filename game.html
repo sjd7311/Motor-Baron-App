@@ -1643,11 +1643,11 @@ function render(){
   const last=state.fin.hist[state.fin.hist.length-1];
   const tabs=[['overview','Overview'],['models','Models'],['design','Design'],['factories','Factories'],['regions','Regions'],['market','Market'],['racing','Racing'],['finance','Finance'],['stocks','Stocks'],['fortune','Fortune'],['staff','Staff'],['news','News']];
   let h='<header class="top"><div class="wrap"><div class="topbar">'+
-    '<div class="brand">'+esc(C.name)+'<small>Motor Baron'+(FREE?': 1900':'')+'</small></div>'+
+    '<div class="brand">'+esc(C.name)+'</div>'+
     '<div class="date">'+dateLabel(state.m)+'</div><div class="brk"></div>'+
     '<div class="topstats">'+
       '<div class="stat"><label>Cash</label><b class="'+(C.cash<0?'neg':'')+'">'+money(C.cash)+'</b></div>'+
-      '<div class="stat"><label>Loan</label><b class="'+(C.emLoan>0?'neg':'')+'">'+money(debt())+'</b></div>'+
+      (debt()>0?'<div class="stat"><label>Loan</label><b class="'+(C.emLoan>0?'neg':'')+'">'+money(debt())+'</b></div>':'')+
       '<div class="stat" title="Profit counts a car\'s cost when it sells, not when it is built, so cash and profit can move differently."><label>Profit last mo</label><b class="'+(last&&last.net<0?'neg':'')+'">'+(last?bm(last.net):'—')+'</b></div>'+
       '<div class="stat"><label>Reputation</label><b>'+Math.round(C.rep)+'</b></div>'+
     '</div><div class="spacer"></div><div class="actions">'+
@@ -2247,12 +2247,12 @@ function renderStart(){
   app.innerHTML='<main class="wrap" style="max-width:620px;padding-top:48px"><section class="panel" style="gap:16px"><div class="eyebrow">January 1900'+(FREE?' · Free edition':'')+'</div><div class="titlecard">Motor Baron</div><p>Start with '+money(START_CAPITAL)+' and an idea. Design your first car, build a factory, and take on carmakers that are already selling. The game runs from 1900 to '+END_YEAR+'.</p>'+
    '<div class="field"><label>Your name, as the founder</label><div class="row" style="flex-wrap:nowrap"><input id="ng-first" class="txt" placeholder="First name" maxlength="20" value="'+esc(ui.ngFirst||'')+'"><input id="ng-last" class="txt" placeholder="Last name" maxlength="24" value="'+esc(ui.ngLast||'')+'"><button class="btn" data-act="ngpick" title="Pick a name for me">Pick for me</button></div></div>'+
    '<p class="hint">Libraries, halls and universities you fund later will carry this name.</p>'+
-   '<div class="field"><label for="ng-name">Company name</label><input id="ng-name" class="txt" value="Keystone Motor Car Co." maxlength="40"></div>'+
-   '<div class="field"><label for="ng-home">Headquarters</label><select id="ng-home" class="sel">'+REGIONS.map(r=>'<option value="'+r.id+'" '+(r.id==='gl'?'selected':'')+'>'+r.name+' ('+r.city+') · wages '+r.wage.toFixed(2)+'×, income '+r.inc.toFixed(2)+'×</option>').join('')+'</select></div>'+
-   '<p class="hint">Where your office is. You can build factories and sign dealers anywhere. Rich, dense regions buy more cars; low-wage regions build them for less.</p>'+
+   '<div class="field"><label for="ng-name">Company name</label><div class="row" style="flex-wrap:nowrap"><input id="ng-name" class="txt" placeholder="Name your company" maxlength="40" style="flex:1"><button class="btn" data-act="ngco" title="Pick a company name for me">Pick for me</button></div></div>'+
+   '<div class="field"><label for="ng-home">Starting region</label><select id="ng-home" class="sel"><option value="" selected>Choose where to start…</option>'+REGIONS.map(r=>'<option value="'+r.id+'">'+r.name+' ('+r.city+') · wages '+r.wage.toFixed(2)+'×, income '+r.inc.toFixed(2)+'×</option>').join('')+'</select></div>'+
+   '<p class="hint">Your headquarters goes here. You can build factories and sign dealers anywhere. Rich, dense regions buy more cars; low-wage regions build them for less.</p>'+
    '<div class="field"><label for="ng-loan">Starting bank loan</label><select id="ng-loan" class="sel">'+[0,10000,20000,30000,40000].map(v=>'<option value="'+v+'" '+(v===20000?'selected':'')+'>'+(v?money(v)+' at '+(LOAN_RATE*100)+'% a year ('+money(v*LOAN_RATE/12)+'/mo interest)':'No loan')+'</option>').join('')+'</select></div>'+
    '<p class="hint">A first design costs about $3,500 and a small two-line factory about $7,500. You can borrow more later, up to the bank\'s limit of '+money(maxLoan(1900))+' this year.</p>'+
-   '<div class="row"><button class="btn primary" data-act="newgame">Found the company</button><button class="btn" data-act="importopen">Import a save</button></div></section></main>'+renderModal();
+   '<p class="small neg" id="ng-err" role="alert"></p><div class="row"><button class="btn primary" data-act="newgame">Found the company</button><button class="btn" data-act="importopen">Import a save</button></div></section></main>'+renderModal();
 }
 function renderModal(){
   const md=ui.modal;if(!md) return '';
@@ -2452,8 +2452,13 @@ const A={
   importopen:()=>{ui.modal={type:'import'};render();},
   newconfirm:()=>{ui.modal={type:'newconfirm'};render();},
   donew:()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}backup(SAVE_KEY,null);state=null;ui.modal=null;ui.prev=null;ui.design=null;render();},
+  ngco:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const l=(document.getElementById('ng-last').value||'').trim();const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);
+    const base=l&&Math.random()<.6?cap(l):rnd(['Keystone','Liberty','Pioneer','Empire','Standard','Continental','Union','Eagle','Monarch','Victory','Lakeside','Frontier','Northern','Atlas','Sterling']);
+    const el=document.getElementById('ng-name');if(el){el.value=base+' '+rnd(['Motor Company','Motor Car Co.','Automobile Company','Motor Works','Motor Carriage Co.','Auto Company']);}const err=document.getElementById('ng-err');if(err) err.textContent='';},
   ngpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ng-first'),l=document.getElementById('ng-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
-  newgame:()=>{const name=(document.getElementById('ng-name').value||'').trim()||'Keystone Motor Car Co.';const home=document.getElementById('ng-home').value;const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});save();render();},
+  newgame:()=>{const name=(document.getElementById('ng-name').value||'').trim();const home=document.getElementById('ng-home').value;const err=document.getElementById('ng-err');
+    if(!name){if(err) err.textContent='Give your company a name, or tap Pick for me.';document.getElementById('ng-name').focus();return;}
+    if(!home){if(err) err.textContent='Choose the region where your company starts.';document.getElementById('ng-home').focus();return;}const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});save();render();},
   copyexport:()=>{const ta=document.getElementById('exp-text');const m=document.getElementById('copy-msg');const done=()=>{if(m) m.textContent='Copied.';};try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';});}catch(e){ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';}},
   doimport:()=>{const t=document.getElementById('imp-text').value;try{const p=JSON.parse(t);if(!p||p.v!==1||!p.company) throw new Error('bad');state=migrate(p);ui.modal=null;ui.prev=null;ui.design=null;save();render();}catch(e){const er=document.getElementById('imp-err');if(er) er.textContent='That text is not a Marque save. Paste the whole export, from the first { to the last }.';}},
   closemodal:()=>{ui.modal=null;render();},
