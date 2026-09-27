@@ -38,6 +38,7 @@ body{color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
 .wrap{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
 header.top .wrap{padding-block:0}
+body{padding-top:env(safe-area-inset-top,0px)}body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60;pointer-events:none}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:2px solid var(--ink)}
 .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding-block:10px 8px}
 .brand{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.03em;text-transform:uppercase;line-height:1}
