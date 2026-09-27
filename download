@@ -1,0 +1,6 @@
+node_modules/
+ios/
+www/
+edition.env
+capacitor.config.json
+resources/icon.png

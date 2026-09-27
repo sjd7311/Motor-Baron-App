@@ -1,0 +1,10 @@
+{
+  "appId": "com.spencerdeville.motorbaron.free",
+  "appName": "Motor Baron: 1900",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#e9ece6",
+    "scrollEnabled": true
+  }
+}

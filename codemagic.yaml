@@ -1,0 +1,69 @@
+# Codemagic builds the iPhone app on a cloud Mac and sends it to TestFlight.
+# Two workflows: the full game and the free 1900 Edition. Start either one from the Codemagic dashboard.
+definitions:
+  steps: &ios_steps
+    - name: Install packages
+      script: npm ci
+    - name: Build the game for this edition
+      script: node scripts/prepare.js $EDITION
+    - name: Create the Xcode project
+      script: |
+        rm -rf ios
+        npx cap add ios
+    - name: App icon and launch screen
+      script: |
+        cp resources/icon-$EDITION.png resources/icon.png
+        npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#1d5842' --splashBackgroundColor '#e9ece6'
+    - name: iPhone only, portrait, version numbers
+      script: node scripts/patch-ios.js $PROJECT_BUILD_NUMBER
+    - name: Copy the game into the app
+      script: npx cap sync ios
+    - name: Code signing
+      script: xcode-project use-profiles
+    - name: Build the app
+      script: xcode-project build-ipa --project "ios/App/App.xcodeproj" --scheme "App"
+
+workflows:
+  baron-full:
+    name: Motor Baron (full game)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Motor Baron ASC
+    environment:
+      node: 20
+      xcode: latest
+      vars:
+        EDITION: full
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.spencerdeville.motorbaron
+    scripts: *ios_steps
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  baron-free:
+    name: Motor Baron 1900 (free)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Motor Baron ASC
+    environment:
+      node: 20
+      xcode: latest
+      vars:
+        EDITION: free
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.spencerdeville.motorbaron.free
+    scripts: *ios_steps
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
