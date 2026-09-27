@@ -2,15 +2,18 @@
 # Two workflows: the full game and the free 1900 Edition. Start either one from the Codemagic dashboard.
 definitions:
   steps: &ios_steps
-    - name: Sort files into folders
+    - &sort_files
+      name: Sort files into folders
       script: |
         # Files uploaded through the GitHub website can land flat; put them where the build expects them.
         mkdir -p scripts resources src fonts
-        for f in prepare.js patch-ios.js; do [ -f "$f" ] && mv "$f" scripts/; done
+        for f in prepare.js patch-ios.js make-gamecenter.js gamecenter-setup.py; do [ -f "$f" ] && mv "$f" scripts/; done
         for f in icon-full.png icon-free.png splash.png splash-dark.png; do [ -f "$f" ] && mv "$f" resources/; done
         [ -f game.html ] && mv game.html src/
         for f in *.woff2; do [ -f "$f" ] && mv "$f" fonts/; done
         ls scripts resources src fonts
+    - name: Game Center plugin
+      script: node scripts/make-gamecenter.js
     - name: Install packages
       script: npm ci
     - name: Build the game for this edition
@@ -53,7 +56,7 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        submit_to_testflight: false
 
   baron-free:
     name: Motor Baron 1900 (free)
@@ -62,7 +65,7 @@ workflows:
     integrations:
       app_store_connect: Motor Baron ASC
     environment:
-      node: 20
+      node: 22
       xcode: latest
       vars:
         EDITION: free
@@ -75,4 +78,20 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        submit_to_testflight: false
+
+  gamecenter-setup:
+    name: Set up Game Center achievements
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      groups:
+        - app_store_credentials
+      vars:
+        BUNDLE_ID: com.spencerdeville.motorbaron
+    scripts:
+      - *sort_files
+      - name: Create achievements in App Store Connect
+        script: |
+          python3 -m pip install --quiet pyjwt cryptography pillow || python3 -m pip install --quiet --break-system-packages pyjwt cryptography pillow
+          python3 scripts/gamecenter-setup.py

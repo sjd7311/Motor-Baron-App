@@ -17,5 +17,17 @@ let pbx = fs.readFileSync(pbxP, 'utf8');
 pbx = pbx.replace(/TARGETED_DEVICE_FAMILY = "1,2";/g, 'TARGETED_DEVICE_FAMILY = 1;')
   .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`)
   .replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${build};`);
+// Game Center needs this entitlement in the signed app.
+fs.writeFileSync(path.join(root, 'ios/App/App/App.entitlements'), `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>com.apple.developer.game-center</key>
+\t<true/>
+</dict>
+</plist>
+`);
+if (!pbx.includes('CODE_SIGN_ENTITLEMENTS'))
+  pbx = pbx.replace(/INFOPLIST_FILE = App\/Info.plist;/g, 'CODE_SIGN_ENTITLEMENTS = App/App.entitlements;\n\t\t\t\tINFOPLIST_FILE = App/Info.plist;');
 fs.writeFileSync(pbxP, pbx);
-console.log('Patched iOS project: iPhone only, portrait, version', version, 'build', build);
+console.log('Patched iOS project: iPhone only, portrait, Game Center, version', version, 'build', build);

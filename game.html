@@ -1124,17 +1124,16 @@ const ACH=[
  {id:'end_era',pts:45,name:'The End of an Era',d:'Reach December 1970 still in business.',t:()=>state.m>=FULL_END_M&&!state.over}
 ];
 function achLife(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return {};}}
-function nativeReport(id){try{
-  // Filled in when the game is wrapped as an app (Game Center on iPhone, Play Games on Android).
-  if(window.MarqueNative&&window.MarqueNative.unlock) window.MarqueNative.unlock('motorbaron.'+id);
-  else{const P=window.Capacitor&&window.Capacitor.Plugins;const g=P&&(P.GameServices||P.CapacitorGameConnect);if(g&&g.unlockAchievement) g.unlockAchievement({achievementID:'motorbaron.'+id,achievementId:'motorbaron.'+id});}
-}catch(e){}}
+// Game Center on iPhone (full game). The native side is the small MotorBaronGameCenter plugin.
+let _gc,gcIn=false;
+function GC(){if(_gc!==undefined) return _gc;_gc=null;try{const C=window.Capacitor;if(!FREE&&C&&C.isNativePlatform&&C.isNativePlatform()&&C.registerPlugin) _gc=C.registerPlugin('MotorBaronGameCenter');}catch(e){}return _gc;}
+function gcStart(){const g=GC();if(!g) return;try{g.signIn().then(r=>{gcIn=!!(r&&r.signedIn);if(gcIn){const ids=Object.keys(achLife()).map(i=>'motorbaron.'+i);if(ids.length) g.unlockMany({ids}).catch(()=>{});}}).catch(()=>{});}catch(e){}}
+function nativeReport(id){try{const g=GC();if(g&&gcIn) g.unlock({id:'motorbaron.'+id}).catch(()=>{});}catch(e){}}
 function checkAch(){
   if(!state) return;const got=state.ach||(state.ach={});const life=achLife();let changed=false;
   ACH.forEach(a=>{if(got[a.id]!=null) return;let ok=false;try{ok=!!a.t();}catch(e){}
     if(ok){got[a.id]=state.m;(ui.achNew||(ui.achNew=[])).push(a.name);addNews('Achievement unlocked: '+a.name+'. '+a.d,'good');if(!life[a.id]){life[a.id]=Date.now();changed=true;}nativeReport(a.id);}});
   if(changed) try{const j=JSON.stringify(life);localStorage.setItem(ACH_KEY,j);backup(ACH_KEY,j);}catch(e){}
-  Object.keys(life).forEach(id=>nativeReport(id));
 }
 /* ================= state ================= */
 const SAVE_KEY='marque-stage1-save';
@@ -2257,6 +2256,9 @@ function renderModal(){
   const md=ui.modal;if(!md) return '';
   let body='';
   if(md.type==='menu'){body='<h2>Game</h2><p class="muted">Your game saves in this browser after every month. To move it to another device, export it and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
+  else if(md.type==='ach'){const got=state.ach||{};const life=achLife();const n=ACH.filter(a=>got[a.id]!=null).length;const pts=ACH.filter(a=>got[a.id]!=null).reduce((t,a)=>t+a.pts,0);
+    body='<h2>Achievements</h2><p class="small">'+n+' of '+ACH.length+' in this game · '+pts+' of 1,000 points. Gold medals were earned in this game; grey ones in an earlier game.</p>'+(GC()?'<div class="row"><button class="btn" data-act="gcshow">Open Game Center</button></div>':'')+
+    '<div class="achlist">'+ACH.map(a=>'<div class="ach'+(got[a.id]!=null?' got':life[a.id]?' life':'')+'"><span class="medal"></span><div><b>'+esc(a.name)+'</b> <span class="muted small">'+a.pts+' pts</span><div class="small">'+a.d+(got[a.id]!=null?' <span class="muted">· '+dateShort(got[a.id])+'</span>':'')+'</div></div></div>').join('')+'</div>';}
   else if(md.type==='export'){body='<h2>Export save</h2><p class="muted">Copy this text and keep it somewhere safe.</p><textarea id="exp-text" readonly>'+esc(JSON.stringify(state))+'</textarea><div class="row">'+(window.claude?'':'<button class="btn primary" data-act="saveexport">Save as a file</button>')+'<button class="btn'+(window.claude?' primary':'')+'" data-act="copyexport">Copy text</button><span class="muted small" id="copy-msg"></span></div>'+(window.claude?'<p class="hint">To move this game to the phone app, copy the text, send it to yourself (email or a note), then paste it into Import save in the app.</p>':'<p class="hint">On a phone, "Save as a file" lets you send it to yourself or save it to Files or Drive, then load it on the other device.</p>')+'';}
   else if(md.type==='import'){body='<h2>Import save</h2><p class="muted">Paste an exported save. This replaces the current game.</p><div class="row"><label class="btn primary" style="cursor:pointer">Load a save file<input type="file" accept=".json,application/json,text/plain" data-chg="impfile" style="display:none"></label></div><p class="muted small" style="margin-top:10px">Or paste the save text:</p><textarea id="imp-text"></textarea><p class="small neg" id="imp-err"></p><div class="row"><button class="btn" data-act="doimport">Import pasted text</button></div>';}
   else if(md.type==='newconfirm'){body='<h2>Start a new game?</h2><p>This deletes the current company. Export it first if you want to keep it.</p><div class="row"><button class="btn danger" data-act="donew">Delete and start over</button></div>';}
@@ -2342,6 +2344,7 @@ function endMonth(force){
 const A={
   achopen:()=>{ui.modal={type:'ach'};render();},
   achclose:()=>{ui.achNew=[];render();},
+  gcshow:()=>{const g=GC();if(!g) return;g.show().then(r=>{if(!r||!r.shown) msg('Game Center','Sign in to Game Center in your iPhone Settings (Settings, then Game Center), then open the game again.');}).catch(()=>{});},
   govopen:()=>{ui.modal={type:'gov'};render();},
   govdo:()=>{const md=ui.modal;const o=state.gov.offer;const c=govContracts().find(x=>x.id===o.cid);const x=byId(state.models,o.mid);const f=byId(state.factories,md.f);const Y=yearOf(state.m);
     const perLine=Math.max(1,Math.round(capPerLine(Y)*meth(f).cap));const units=Math.min(o.units,md.l*perLine);const est=estimateUnitCost(x,f,state.m);
@@ -2509,6 +2512,7 @@ function start(data){
   else load();
   render();
   if(!state) restoreBackup().then(ok=>{if(ok&&!state&&load()) render();});
+  gcStart();
 }
 try{if(window.claude&&window.claude.hot&&window.claude.hot.snapshot) window.claude.hot.snapshot(()=>({state,ui}));}catch(e){}
 if(window.claude&&window.claude.hot&&window.claude.hot.ready) window.claude.hot.ready(start);
