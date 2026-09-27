@@ -33,7 +33,12 @@ definitions:
     - name: Code signing
       script: xcode-project use-profiles
     - name: Build the app
-      script: xcode-project build-ipa --project "ios/App/App.xcodeproj" --scheme "App"
+      script: |
+        if ! xcode-project build-ipa --project "ios/App/App.xcodeproj" --scheme "App"; then
+          echo "===== Errors from Xcode ====="
+          grep -h -E "error:|: error|requires a provisioning profile|doesn't include|entitlement" /tmp/xcodebuild_logs/*.log | sort -u | head -60
+          exit 1
+        fi
 
 workflows:
   baron-full:
@@ -53,6 +58,7 @@ workflows:
     scripts: *ios_steps
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
@@ -75,6 +81,7 @@ workflows:
     scripts: *ios_steps
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
