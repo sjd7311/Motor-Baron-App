@@ -8,7 +8,7 @@ definitions:
         # Files uploaded through the GitHub website can land flat; put them where the build expects them.
         mkdir -p scripts resources src fonts
         for f in prepare.js patch-ios.js make-gamecenter.js gamecenter-setup.py; do [ -f "$f" ] && mv "$f" scripts/; done
-        for f in icon-full.png icon-free.png splash.png splash-dark.png; do [ -f "$f" ] && mv "$f" resources/; done
+        for f in icon-full.png icon-free.png splash.png splash-dark.png splash-full.png splash-free.png; do [ -f "$f" ] && mv "$f" resources/; done
         [ -f game.html ] && mv game.html src/
         for f in *.woff2; do [ -f "$f" ] && mv "$f" fonts/; done
         ls scripts resources src fonts
@@ -25,7 +25,8 @@ definitions:
     - name: App icon and launch screen
       script: |
         cp resources/icon-$EDITION.png resources/icon.png
-        npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#1d5842' --splashBackgroundColor '#e9ece6'
+        if [ -f resources/splash-$EDITION.png ]; then cp resources/splash-$EDITION.png resources/splash.png; cp resources/splash-$EDITION.png resources/splash-dark.png; fi
+        npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#1d5842' --splashBackgroundColor '#1d5842' --splashBackgroundColorDark '#1d5842'
     - name: iPhone only, portrait, version numbers
       script: node scripts/patch-ios.js $PROJECT_BUILD_NUMBER
     - name: Copy the game into the app
