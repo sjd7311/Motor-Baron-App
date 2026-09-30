@@ -134,7 +134,7 @@ input.txt{width:100%}
 .dstep{gap:6px;margin-bottom:6px}.dstep .btn{min-width:40px;min-height:36px;font-size:18px}
 .warn-t{color:var(--warn)}
 .lastrace{border:2px solid var(--accent);border-radius:8px;padding:10px 14px;margin:6px 0 12px;background:var(--accent-soft)}.lastrace h3{margin:0}.lr-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line)}
-.regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 8px}.rc-st{display:flex;flex-direction:column;justify-content:space-between;gap:2px;min-width:0}.rc-st span{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);line-height:1.25}.rc-st b{font-family:var(--mono);font-size:14px;font-weight:500}.rc-exp{margin-top:4px}
+.regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
 tr.regexp>td{padding:0 0 14px!important;border-bottom:2px solid var(--accent)!important;background:transparent!important}
@@ -1204,7 +1204,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1 (Sep 30, sold per factory)';
+const GAME_BUILD='1.0.1 (Sep 30, region cards 2)';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -2180,13 +2180,14 @@ function viewRegions(){
   h+='<div class="regcards">'+REGIONS.map(r=>{
     const d=state.dealers[r.id];const x=mk&&mk.regions[r.id];const slots=dealerSlots(r.id,Y);
     const share=x&&x.totalSold?x.ourSold/x.totalSold:0;const has=d&&(d.n>0||d.target>0);
-    const st=(k,v,cls)=>'<div class="rc-st"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>';
-    let c='<div class="regcard click'+(ui.region===r.id?' sel':'')+(has?'':' none')+'" data-act="selregion" data-r="'+r.id+'"><div class="rc-top"><div><b>'+r.name+'</b> <span class="muted small">'+r.city+'</span></div><div class="rc-rep"><span class="muted small">Reputation</span> '+repChip(effRep(r.id,Y))+'</div></div><div class="rc-grid">'+
+    const st=(k,v,cls,sub)=>'<div class="rc-st"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</div>';
+    let c='<div class="regcard click'+(ui.region===r.id?' sel':'')+(has?'':' none')+'" data-act="selregion" data-r="'+r.id+'"><div class="rc-top"><div><b>'+r.name+'</b> <span class="muted small">'+r.city+'</span>'+(d&&d.office==='open'?' <span class="chip good">Office</span>':d&&d.office==='building'?' <span class="chip warn">Office opening</span>':'')+'</div><div class="rc-rep"><span class="muted small">Reputation</span> '+repChip(effRep(r.id,Y))+'</div></div><div class="rc-grid">'+
       st('Buyers',lv('market')>=1?int(potential(Y)*rw[r.id]*SEASON[state.m%12]*eventMult(state.m)):'?')+
-      st('Dealers',(has?d.n:0)+' / '+slots+(has&&d.target>d.n?' <span class="muted small">(aim '+d.target+')</span>':''))+
+      st('Dealers',(has?d.n:0)+' / '+slots,'',has&&d.target>d.n?'+'+(d.target-d.n)+' signing':'')+
       st('Our sales',x?int(x.ourSold):'—')+st('Missed',x?int(x.ourMissed):'—',x&&x.ourMissed?'neg':'');
-    if(has) c+=st('Dealer margin',Math.round(d.margin*100)+'%')+st('Satisfied',d.n>0?satShow(d.sat):'—')+st('Our share',x&&lv('market')>=1?pct(share):x?'?':'—')+st('Office',d.office==='open'?'<span class="chip good">Open</span>':d.office==='building'?'<span class="chip warn">Building</span>':'—');
-    c+='</div></div>';
+    c+='</div>';
+    if(has) c+='<div class="rc-grid rc-grid3">'+st('Dealer margin',Math.round(d.margin*100)+'%')+st('Satisfaction',d.n>0?satShow(d.sat):'—')+st('Our share',x&&lv('market')>=1?pct(share):x?'?':'—')+'</div>';
+    c+='</div>';
     if(ui.region===r.id) c+='<div class="regexp-in rc-exp">'+regionPanel(r.id)+'</div>';
     return c;}).join('')+'</div>';
   h+='<p class="hint">Car buyers / mo estimates everyone shopping for a car in the region this month, across all makers. Coverage is dealers signed out of how many the region can support; the number supported grows as the market grows. Reputation is what buyers and dealers in that region think of you. It builds where your cars sell and are well rated. In these early years news travels slowly, so each region mostly judges you on what it sees locally.</p></section>';
