@@ -33,7 +33,8 @@ fs.mkdirSync(path.join(root, 'www', 'fonts'), { recursive: true });
 for (const f of fs.readdirSync(path.join(root, 'fonts'))) fs.copyFileSync(path.join(root, 'fonts', f), path.join(root, 'www', 'fonts', f));
 fs.writeFileSync(path.join(root, 'capacitor.config.json'), JSON.stringify({
   appId: E.appId, appName: E.appName, webDir: 'www',
-  ios: { contentInset: 'never', backgroundColor: '#e9ece6', scrollEnabled: true }
+  ios: { contentInset: 'never', backgroundColor: '#e9ece6', scrollEnabled: true },
+  plugins: { SplashScreen: { launchShowDuration: 1800, launchAutoHide: true, launchFadeOutDuration: 400, backgroundColor: '#1d5842', showSpinner: false, iosSpinnerStyle: 'small' } }
 }, null, 2));
 fs.writeFileSync(path.join(root, 'edition.env'), `APP_NAME="${E.appName}"\nBUNDLE_ID=${E.appId}\n`);
 console.log('Prepared', edition, E.appId, (html.length / 1024).toFixed(0) + ' KB');
