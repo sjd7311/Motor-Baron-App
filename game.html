@@ -134,6 +134,7 @@ input.txt{width:100%}
 .dstep{gap:6px;margin-bottom:6px}.dstep .btn{min-width:40px;min-height:36px;font-size:18px}
 .warn-t{color:var(--warn)}
 .lastrace{border:2px solid var(--accent);border-radius:8px;padding:10px 14px;margin:6px 0 12px;background:var(--accent-soft)}.lastrace h3{margin:0}.lr-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line)}
+.nt-list{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow:auto}.nt-card{display:flex;flex-direction:column;gap:10px;border:2px solid var(--brass);border-radius:8px;padding:10px;background:var(--surface);box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 4px var(--brass)}.nt-art{display:block;width:100%;height:120px;padding:10px 0;color:var(--accent);background:radial-gradient(ellipse at center,var(--good-bg),var(--bg) 75%);border-radius:4px}.nt-txt{padding:0 6px 4px}.nt-txt{display:flex;flex-direction:column;gap:2px;min-width:0}.nt-kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}.nt-txt b{font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}.nt-txt p{margin:4px 0 0;font-size:14px}
 .regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
@@ -1199,12 +1200,199 @@ const ACH=[
 function achLife(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return {};}}
 // Game Center on iPhone (full game). The native side is the small MotorBaronGameCenter plugin.
 // Haptics on iPhone: a small tap or buzz for things that happen. Off switch in the Game menu.
+// ----- "New in the design studio" cards: a short pop-up with a drawing when parts or markets arrive -----
+const NT_BLURB={
+ 'Tubular steel frame':'Bicycle makers bring their light steel tubing to the motor car. Lighter and stronger than wood.',
+ 'Steel ladder frame':'Two steel rails joined by cross-members, like a ladder. Heavier, but it carries bigger bodies and engines.',
+ 'Heavy steel ladder':'A beefed-up ladder frame built to haul. The backbone for trucks and big touring cars.',
+ 'Pressed-steel frame':'Rails stamped from sheet steel in giant presses. Strong, lighter, and quick to build on a moving line.',
+ 'X-braced frame':'An X of steel across the middle stiffens the car, so it rides quieter and rattles less.',
+ 'Unit body (no separate frame)':'Body and frame welded into one shell. Light and stiff, but the tooling is costly.',
+ 'Perimeter frame':'The rails sweep out around the passengers, so the floor and the whole car can sit lower.',
+ 'Full-elliptic springs':'Two curved leaf springs joined at the ends, like the best carriages. A softer ride on rough roads.',
+ 'Semi-elliptic springs':'Half the spring, nearly all the comfort, and much tougher. Becomes the standard for decades.',
+ 'Springs + shock absorbers':'Dampers tame the bouncing after every bump. Buyers notice the difference at once.',
+ 'Independent front suspension':'Each front wheel moves on its own, so one pothole no longer shakes the whole car.',
+ 'Coil springs all round':'Coil springs at every corner give a smooth, modern ride.',
+ 'Ball-joint front suspension':'Ball joints make steering lighter and the front end easier to build and service.',
+ 'Flat twin':'Two cylinders lying flat, opposite each other. Smoother and stronger than a single.',
+ 'Compound steam engine':'Steam is used twice, in a small cylinder and then a large one. More power from every fill of water.',
+ 'Straight-3':'Three cylinders in a row: more power and a smoother pull than the twins.',
+ 'Straight-4':'Four cylinders in a row. The engine that will carry most of America for years.',
+ 'T-head Straight-4':'Valves on both sides of the cylinders give big power for racing and fast touring cars.',
+ 'Electric motor, nickel-iron batteries':"Edison's tougher batteries last longer and recharge better. A boost for quiet city electrics.",
+ 'Straight-6':'Six cylinders in a row: silky, strong and quiet. The mark of a fine car.',
+ 'V8':'Eight cylinders in a V. Big power in a short engine.',
+ 'V12':'Twelve cylinders of pure luxury, smooth as a turbine and just as thirsty.',
+ 'Flathead V8':'A V8 cast in one piece, cheap enough for everyday cars. Power for the masses.',
+ 'Air-cooled flat-4':'No radiator and no water to freeze. Simple, light and tough.',
+ 'Overhead-valve V8':'Valves overhead let the engine breathe. More power from less fuel, and room to grow.',
+ 'Overhead-valve straight-6':'A modern six that breathes better. Thrifty and dependable.',
+ 'Big-block V8':'A huge V8 for big cars and fast ones. Horsepower is the new selling point.',
+ 'Compact straight-4':'A small, light four for small, thrifty cars.',
+ 'V6':'Six cylinders in a short V: nearly the smoothness of a six in the space of a four.',
+ 'Friction drive':'Two discs pressed together give endless speeds with no gears to clash. Simple, but it wears.',
+ '3-speed manual':'A sliding-gear box with three speeds. Better climbing and a higher top speed.',
+ '4-speed manual':'One more gear for heavy cars and steep hills.',
+ '3-speed synchromesh':'Gears that match speeds before they mesh. No more grinding when you shift.',
+ '3-speed column shift':'The gear lever moves to the steering column, freeing the front seat for three.',
+ '4-speed fluid automatic':'The car shifts for itself. No clutch pedal, no stalling.',
+ 'Torque-converter automatic':'A smoother, stronger automatic. Soon buyers will expect it.',
+ '4-speed floor shift':'A short lever on the floor and four close gears. Sporty drivers love it.',
+ 'Cast-aluminum panels':'Light, rust-free cast panels. They save weight but cost more.',
+ 'Wood frame, steel panels':'Steel skin over an ash frame: stronger and smoother, and the base for closed cars.',
+ 'All-steel body':'Bodies stamped entirely from steel. Stronger, safer, and made for the moving line.',
+ 'Streamlined steel body':'Rounded, flowing steel shaped by the wind tunnel. It looks fast standing still.',
+ 'Pillarless hardtop':'No pillar between the windows. Roll them down for a convertible look with a steel roof.',
+ 'Fiberglass body':'Molded plastic panels that never rust. Ideal for small runs and sports cars.',
+ 'Rust-proofed modern steel body':'Dipped and sealed steel that holds up to salted winter roads.',
+ 'Vinyl and chrome':'Bright vinyl and gleaming chrome. The look of the age, and easy to clean.',
+ 'Windshield':'A sheet of glass keeps bugs, dust and rain off the driver.',
+ 'Speedometer':'Drivers can see how fast they are going for the first time, handy with speed limits on the way.',
+ 'Demountable rims':'Swap a flat tire on the roadside in minutes, not hours.',
+ 'Electric lamps':'Bright electric headlamps replace smoky gas and oil. Driving after dark gets easier.',
+ 'Electric starter':'No more dangerous hand crank. Anyone can start a gasoline car with the press of a button.',
+ 'Four-wheel brakes':'Brakes on all four wheels stop the car much sooner. A real safety leap.',
+ 'Safety glass':"Glass that cracks but won't shatter into the cabin.",
+ 'Radio':'Music and news on the road. Buyers will pay for it.',
+ 'Heater':'Warm air from the engine makes winter driving bearable.',
+ 'Sealed-beam headlights':'Brighter, standard headlights that never dim with dirt.',
+ 'Power steering':'Turn the wheel with a finger, even in a big heavy car.',
+ 'Power brakes':'Stop a heavy car with a light touch.',
+ 'Air conditioning':'Cool air in the summer heat. A luxury that will become a must.',
+ 'Seat belts':'Belts that hold riders in a crash. Safety starts to sell.',
+ 'Front disc brakes':'Disc brakes up front stop hard again and again without fading.',
+ 'Emission controls':'New rules on exhaust. Cleaner air, at some cost to power.'
+};
+const NT_CATS=[['chassis','Frame',()=>CHASSIS],['susp','Suspension',()=>SUSP],['engine','Engine',()=>ENGINES],['gear','Gearbox',()=>GEARS],['body','Body',()=>BODIES],['interior','Interior',()=>INTERIORS],['feature','Feature',()=>FEATURES]];
+const NT_ART={
+ chassis:'<rect x="20" y="30" width="160" height="10" rx="3"/><rect x="20" y="80" width="160" height="10" rx="3"/><path d="M40 40v40M75 40v40M110 40v40M145 40v40"/><circle cx="35" cy="20" r="9"/><circle cx="35" cy="100" r="9"/><circle cx="165" cy="20" r="9"/><circle cx="165" cy="100" r="9"/>',
+ susp:'<path d="M20 70 Q100 30 180 70"/><path d="M30 76 Q100 42 170 76"/><path d="M45 82 Q100 56 155 82"/><path d="M60 88 Q100 70 140 88"/><rect x="88" y="82" width="24" height="18" rx="2"/><circle cx="20" cy="70" r="6"/><circle cx="180" cy="70" r="6"/>',
+ engine:'<rect x="40" y="50" width="120" height="50" rx="4"/><path d="M40 75h120"/><rect x="52" y="22" width="18" height="28" rx="2"/><rect x="80" y="22" width="18" height="28" rx="2"/><rect x="108" y="22" width="18" height="28" rx="2"/><rect x="136" y="22" width="12" height="28" rx="2"/><circle cx="100" cy="110" r="8"/><path d="M60 100v8M140 100v8"/>',
+ gear:'<circle cx="75" cy="62" r="32"/><circle cx="75" cy="62" r="9"/><circle cx="135" cy="62" r="20"/><circle cx="135" cy="62" r="6"/><path d="M75 22v8M75 94v8M35 62h8M107 62h8M47 34l6 6M97 84l6 6M47 90l6-6M97 40l6-6M135 34v6M135 84v6M155 62h6M115 62h6"/>',
+ body:'<path d="M15 85h170v-12l-20-6-18-26H70L50 67H25l-10 6z"/><path d="M78 47h34v20H72zM118 47h22l13 20h-35z"/><circle cx="55" cy="88" r="13"/><circle cx="150" cy="88" r="13"/>',
+ feature:'<circle cx="100" cy="60" r="34"/><path d="M100 36l7 15 16 2-12 11 3 16-14-8-14 8 3-16-12-11 16-2z"/><path d="M52 98q-14-28 0-60M148 98q14-28 0-60"/>',
+ truck:'<path d="M15 88h170V64h-60V38H60L40 64H15z"/><path d="M66 44h32v20H50z"/><path d="M110 64V48h70v16"/><circle cx="55" cy="92" r="12"/><circle cx="150" cy="92" r="12"/><path d="M150 30V8l26 8-26 8"/>',
+ market:'<path d="M15 88h170v-10l-22-8-20-24H75L55 70H28l-13 8z"/><circle cx="55" cy="92" r="12"/><circle cx="150" cy="92" r="12"/><path d="M100 46V10l34 10-34 10"/>'
+};
+// One drawing per part and market (200x120, line art in currentColor). Built from a few helpers so each is distinct.
+const NTA=(()=>{
+ const F='fill="currentColor" fill-opacity=".15"';
+ const wheelsTop='<rect x="24" y="8" width="24" height="10" rx="3"/><rect x="24" y="102" width="24" height="10" rx="3"/><rect x="152" y="8" width="24" height="10" rx="3"/><rect x="152" y="102" width="24" height="10" rx="3"/>';
+ const wh=(x,y,r)=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'"/><circle cx="'+x+'" cy="'+y+'" r="'+(r*.35)+'"/>';
+ const ground='<path d="M8 112h184" stroke-opacity=".35"/>';
+ // engines
+ const cyl=(x,y,w,h,t)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="2" '+F+'/>'+(t?'<path d="M'+(x-2)+' '+(y+4)+'h'+(w+4)+'M'+(x-2)+' '+(y+10)+'h'+(w+4)+'"/>':'');
+ const inline=(n,o)=>{o=o||{};const bw=Math.min(150,30+n*20),x0=100-bw/2;let s='<rect x="'+x0+'" y="56" width="'+bw+'" height="40" rx="4"/><path d="M'+x0+' 74h'+bw+'"/><circle cx="100" cy="104" r="7"/>';const cw=(bw-16)/n-4;for(let i=0;i<n;i++){const cx=x0+8+i*(cw+4);s+=cyl(cx,o.tall?20:30,cw,o.tall?36:26);}
+   if(o.thead){s+='<path d="M'+(x0-8)+' 40h12M'+(x0+bw-4)+' 40h12"/><circle cx="'+(x0-8)+'" cy="40" r="4"/><circle cx="'+(x0+bw+8)+'" cy="40" r="4"/>';}
+   if(o.ohv){s+='<rect x="'+(x0+4)+'" y="16" width="'+(bw-8)+'" height="12" rx="3"/><path d="M'+(x0+20)+' 16v-6M'+(x0+bw-20)+' 16v-6"/>';}
+   if(o.small){s+='<circle cx="'+(x0+bw+14)+'" cy="66" r="8"/>';}
+   return s;};
+ const vee=(n,o)=>{o=o||{};const per=n/2;let s='<path d="M60 96h80l18-40-30-30-28 34-28-34-30 30z" '+F+'/><circle cx="100" cy="104" r="7"/>';for(let i=0;i<per;i++){const t=i/(per-1||1);s+='<circle cx="'+(48+t*30)+'" cy="'+(62-t*28)+'" r="4"/><circle cx="'+(152-t*30)+'" cy="'+(62-t*28)+'" r="4"/>';}
+   if(o.flat){s+='<path d="M72 60h56" stroke-dasharray="4 4"/>';}
+   if(o.ohv){s+='<rect x="34" y="20" width="36" height="12" rx="3" transform="rotate(-45 52 26)"/><rect x="130" y="20" width="36" height="12" rx="3" transform="rotate(45 148 26)"/>';}
+   if(o.big){s+='<path d="M86 10h28v18H86z" '+F+'/><path d="M92 10V4M108 10V4"/>';}
+   return s;};
+ const flat=(n,fins)=>{let s='<rect x="80" y="44" width="40" height="44" rx="4" '+F+'/><circle cx="100" cy="100" r="7"/>';const k=n/2;for(let i=0;i<k;i++){const y=50+i*(32/(k||1));s+='<rect x="34" y="'+y+'" width="46" height="'+(28/k)+'" rx="2"/><rect x="120" y="'+y+'" width="46" height="'+(28/k)+'" rx="2"/>';}
+   if(fins){for(let x=40;x<80;x+=8)s+='<path d="M'+x+' 40v52"/>';for(let x=126;x<166;x+=8)s+='<path d="M'+x+' 40v52"/>';s+='<path d="M86 30h28l-4 14H90z"/>';}
+   return s;};
+ // car side views
+ const car=(body,o)=>{o=o||{};return ground+'<path d="'+body+'" '+F+'/>'+(o.win||'')+wh(o.fx||52,o.wy||96,o.r||14)+wh(o.rx||150,o.wy||96,o.r||14)+(o.extra||'');};
+ const A={
+ // frames
+ tube:wheelsTop+'<path d="M36 18c30 10 100 10 128 0M36 102c30-10 100-10 128 0"/><path d="M38 22c30 10 98 10 124 0M38 98c30-10 98-10 124 0"/><circle cx="70" cy="30" r="4"/><circle cx="70" cy="90" r="4"/><circle cx="130" cy="30" r="4"/><circle cx="130" cy="90" r="4"/><path d="M70 30v60M130 30v60"/>',
+ steel:wheelsTop+'<rect x="22" y="30" width="156" height="10" rx="3"/><rect x="22" y="80" width="156" height="10" rx="3"/><path d="M40 40v40M75 40v40M110 40v40M145 40v40"/>',
+ heavy:wheelsTop+'<rect x="18" y="26" width="164" height="16" rx="2" '+F+'/><rect x="18" y="78" width="164" height="16" rx="2" '+F+'/><path d="M34 42v36M58 42v36M82 42v36M106 42v36M130 42v36M154 42v36M172 42v36"/><circle cx="28" cy="34" r="2"/><circle cx="172" cy="34" r="2"/><circle cx="28" cy="86" r="2"/><circle cx="172" cy="86" r="2"/>',
+ pressed:wheelsTop+'<path d="M20 40h50l20-8h90v10H92l-20 8H20zM20 80h50l20 8h90V78H92l-20-8H20z" '+F+'/><path d="M60 50v20M120 42v36M160 42v36"/><circle cx="140" cy="37" r="2"/><circle cx="140" cy="83" r="2"/>',
+ xbrace:wheelsTop+'<rect x="22" y="30" width="156" height="8" rx="3"/><rect x="22" y="82" width="156" height="8" rx="3"/><path d="M60 38l80 44M60 82l80-44" stroke-width="5"/><circle cx="100" cy="60" r="7" '+F+'/>',
+ unibody:'<path d="M28 60c0-30 20-44 72-44s72 14 72 44-20 44-72 44-72-14-72-44z" '+F+'/><path d="M64 26v68M136 26v68M64 60h72M28 60h36M136 60h36"/><path d="M80 34h40v52H80z" stroke-dasharray="3 4"/>'+'<circle cx="64" cy="26" r="2"/><circle cx="136" cy="26" r="2"/><circle cx="64" cy="94" r="2"/><circle cx="136" cy="94" r="2"/>',
+ perimeter:wheelsTop+'<path d="M24 46c30 0 34-30 76-30s46 30 76 30M24 74c30 0 34 30 76 30s46-30 76-30" stroke-width="5"/><path d="M70 22v76M130 22v76" stroke-opacity=".5"/><rect x="82" y="40" width="36" height="40" rx="6" stroke-dasharray="3 4"/>',
+ // suspension
+ full:'<path d="M30 60Q100 10 170 60Q100 110 30 60z" '+F+'/><path d="M44 60Q100 24 156 60M44 60Q100 96 156 60M60 60Q100 36 140 60M60 60Q100 84 140 60"/><rect x="88" y="22" width="24" height="10"/><rect x="88" y="88" width="24" height="10"/><circle cx="30" cy="60" r="5"/><circle cx="170" cy="60" r="5"/>',
+ semi:'<path d="M20 60Q100 100 180 60" /><path d="M34 68Q100 98 166 68M50 75Q100 96 150 75M66 82Q100 94 134 82"/><rect x="86" y="90" width="28" height="16" rx="2" '+F+'/><circle cx="20" cy="60" r="5"/><path d="M180 60l8-18"/><circle cx="188" cy="40" r="4"/><path d="M60 20h80" stroke-width="6"/><path d="M100 20v70" stroke-dasharray="4 4"/>',
+ shock:'<path d="M14 84Q90 112 166 84M28 90Q90 110 152 90M44 96Q90 108 136 96"/><circle cx="14" cy="84" r="5"/><circle cx="166" cy="84" r="5"/><rect x="80" y="20" width="24" height="38" rx="3" '+F+'/><rect x="86" y="58" width="12" height="26" rx="2"/><circle cx="92" cy="12" r="6"/><path d="M84 30h16M84 40h16" stroke-opacity=".5"/>',
+ ifs:'<circle cx="34" cy="64" r="26" '+F+'/><circle cx="166" cy="64" r="26" '+F+'/><rect x="84" y="40" width="32" height="44" rx="4"/><path d="M60 50l24 4M60 78l24-6M140 50l-24 4M140 78l-24-6"/><path d="M66 30l6 6-6 6 6 6-6 6M134 30l-6 6 6 6-6 6 6 6"/>',
+ coil:'<circle cx="56" cy="74" r="32" '+F+'/><circle cx="56" cy="74" r="10"/><path d="M118 106h60M118 18h60" stroke-width="5"/>'+[0,1,2,3,4,5].map(i=>'<path d="M124 '+(98-i*14)+'c18 -10 36 -10 48 -4"/><path d="M124 '+(98-i*14)+'c10 -6 26 -12 48 -10" stroke-opacity=".4"/>').join('')+'<path d="M88 74h30"/>',
+ balljoint:'<circle cx="150" cy="62" r="34" '+F+'/><path d="M50 30h60M50 94h60M110 30l12 14M110 94l12-14"/><circle cx="122" cy="44" r="7" '+F+'/><circle cx="122" cy="80" r="7" '+F+'/><path d="M122 44v36"/><circle cx="50" cy="30" r="4"/><circle cx="50" cy="94" r="4"/>',
+ // engines
+ twin:flat(2),
+ steam4:'<rect x="30" y="34" width="70" height="60" rx="30" '+F+'/><path d="M100 64h20"/><rect x="120" y="44" width="22" height="40" rx="2"/><rect x="146" y="38" width="34" height="52" rx="2" '+F+'/><path d="M50 34V18h12v16M140 84v14M60 104c10-8 20 8 30 0" />',
+ s3:inline(3),
+ s4:inline(4),
+ s4t:inline(4,{thead:true}),
+ elec2:'<circle cx="62" cy="64" r="30" '+F+'/><circle cx="62" cy="64" r="10"/><path d="M92 64h18"/>'+[0,1,2].map(i=>'<rect x="'+(112+i*26)+'" y="40" width="22" height="50" rx="3"/><path d="M'+(118+i*26)+' 40v-6M'+(128+i*26)+' 40v-6"/>').join('')+'<path d="M56 56l10 8-10 8"/>',
+ s6:inline(6),
+ v8:vee(8),
+ v12:vee(12),
+ v8f:vee(8,{flat:true}),
+ flat4:flat(4,true),
+ ohv8:vee(8,{ohv:true}),
+ i6ohv:inline(6,{ohv:true}),
+ bigv8:vee(8,{ohv:true,big:true}),
+ i4c:inline(4,{small:true}),
+ v6:vee(6),
+ // gearboxes
+ fric:'<circle cx="70" cy="60" r="44" '+F+'/><circle cx="70" cy="60" r="6"/><circle cx="70" cy="60" r="28" stroke-opacity=".4"/><rect x="118" y="30" width="14" height="60" rx="6"/><path d="M132 60h50M114 22l-10 12M114 98l-10-12"/>',
+ man3:'<path d="M60 30v60M140 30v60M60 60h80" stroke-width="5"/><circle cx="60" cy="30" r="6" '+F+'/><circle cx="60" cy="90" r="6" '+F+'/><circle cx="140" cy="30" r="6" '+F+'/><circle cx="140" cy="90" r="6" '+F+'/><text x="48" y="22" font-size="12" fill="currentColor" stroke="none">1</text><text x="48" y="112" font-size="12" fill="currentColor" stroke="none">2</text><text x="146" y="22" font-size="12" fill="currentColor" stroke="none">3</text><text x="146" y="112" font-size="12" fill="currentColor" stroke="none">R</text>',
+ man4:'<path d="M40 30v60M100 30v60M160 30v60M40 60h120" stroke-width="5"/>'+[[40,30,'1'],[40,90,'2'],[100,30,'3'],[100,90,'4'],[160,30,'R']].map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6" '+F+'/><text x="'+(p[0]+10)+'" y="'+(p[1]+4)+'" font-size="12" fill="currentColor" stroke="none">'+p[2]+'</text>').join(''),
+ syn3:'<circle cx="64" cy="60" r="36" '+F+'/><circle cx="64" cy="60" r="10"/><path d="M110 30l26 30-26 30M124 30l26 30-26 30"/><circle cx="170" cy="60" r="20"/><path d="M64 18v-8M64 102v8M22 60h-8M106 60h8"/>',
+ col3:'<circle cx="80" cy="60" r="44" '+F+'/><circle cx="80" cy="60" r="10"/><path d="M80 16v34M36 60h34M90 60h34"/><path d="M118 74l50 18" stroke-width="5"/><circle cx="172" cy="94" r="7" '+F+'/>',
+ auto4:'<path d="M30 92A70 70 0 0 1 170 92" '+F+'/><path d="M100 92l-40-46" stroke-width="5"/>'+['N','D','L','R'].map((t,i)=>'<text x="'+(48+i*34)+'" y="'+(46-(i===1||i===2?14:0))+'" font-size="15" font-weight="700" fill="currentColor" stroke="none">'+t+'</text>').join(''),
+ auto3:'<circle cx="100" cy="60" r="48" '+F+'/><circle cx="100" cy="60" r="20"/>'+Array.from({length:12},(_,i)=>{const a=i*Math.PI/6;return '<path d="M'+(100+22*Math.cos(a)).toFixed(1)+' '+(60+22*Math.sin(a)).toFixed(1)+'L'+(100+44*Math.cos(a+.3)).toFixed(1)+' '+(60+44*Math.sin(a+.3)).toFixed(1)+'"/>';}).join(''),
+ man4s:'<path d="M70 108h60l-8-40H78z" '+F+'/><path d="M100 68V26" stroke-width="5"/><circle cx="100" cy="20" r="12" '+F+'/><path d="M150 30v40M180 30v40M150 50h30" stroke-opacity=".7"/>',
+ // bodies
+ alum:car('M12 92h176V72l-14-8h-30l-10-20h-6l-4 20H62l-6-12H44l-4 12H24l-12 8z',{extra:'<path d="M30 74v14M44 74v14M58 74v14M72 74v14M128 74v14M142 74v14M156 74v14M170 74v14" stroke-opacity=".5"/>'}),
+ comp:car('M16 92h170V64l-14-4-12-26H70L56 60H24l-8 8z',{win:'<path d="M74 40h28v20H64zM110 40h26l10 20h-36z"/>',extra:'<path d="M30 66l20 24M50 66l20 24M126 66l20 24M146 66l20 24" stroke-opacity=".45"/>'}),
+ allsteel:car('M14 92h172V62h-10l-6-32H52l-12 32H14z',{win:'<path d="M58 36h40v22H52zM106 36h44l4 22h-48z"/>',extra:'<path d="M102 62v28" stroke-opacity=".5"/><circle cx="160" cy="70" r="2"/>'}),
+ stream:car('M10 92h180c0-18-20-24-44-30-14-26-36-34-70-30-30 4-50 20-62 34-4 6-4 16-4 26z',{win:'<path d="M70 38c14-6 34-6 50 2l10 18H64z"/>',extra:'<path d="M14 80c-4-6 0-10 6-10" />'}),
+ hardtop:car('M8 90h184V72l-30-8-22-22H74L52 64 14 70z',{win:'<path d="M80 46h64l18 18H62z"/>',r:13,extra:'<path d="M20 78h160" stroke-opacity=".6"/>'}),
+ glassfiber:car('M14 90h172c0-12-10-18-30-22l-24-4c-14-14-30-14-44 0l-40 2c-20 2-34 10-34 24z',{win:'<path d="M92 50c8-4 16-4 22 0l-2 12H90z"/>',extra:'<path d="M40 76c20-6 40-6 60 0" stroke-opacity=".6"/>'}),
+ modern:car('M8 92h184V70h-20l-18-24H80L60 70H8z',{win:'<path d="M86 50h62l14 18H72z"/>',extra:'<path d="M24 26c-4 6-6 10 0 12s4-6 0-12zM176 26c-4 6-6 10 0 12s4-6 0-12zM100 14c-4 6-6 10 0 12s4-6 0-12z"/>'}),
+ vinyl:'<path d="M30 46c0-16 140-16 140 0v30H30z" '+F+'/><path d="M24 76h152v14H24z"/><path d="M30 96v10M170 96v10M24 90h152" stroke-width="5"/><path d="M60 34v42M100 30v46M140 34v42" stroke-opacity=".5"/><path d="M28 84h144" stroke-dasharray="2 6"/>',
+ // features
+ wind:'<path d="M50 100V30h100v70" stroke-width="5"/><path d="M56 34h88v60H56z" '+F+'/><path d="M70 50l16-12M80 70l30-24M110 84l26-22" stroke-opacity=".6"/><path d="M40 100h120"/>',
+ speedo:'<circle cx="100" cy="66" r="46" '+F+'/>'+Array.from({length:9},(_,i)=>{const a=Math.PI*(1+i/8);return '<path d="M'+(100+38*Math.cos(a)).toFixed(1)+' '+(66+38*Math.sin(a)).toFixed(1)+'L'+(100+46*Math.cos(a)).toFixed(1)+' '+(66+46*Math.sin(a)).toFixed(1)+'"/>';}).join('')+'<path d="M100 66l26-26" stroke-width="4"/><circle cx="100" cy="66" r="6"/>',
+ demount:wh(80,62,44)+'<path d="M80 18v-8M124 62h8M80 106v8M36 62h-8"/><path d="M140 40h40M168 28l12 12-12 12"/>',
+ lamps:'<path d="M40 40h40v44H40z" '+F+'/><path d="M80 34c16 0 16 56 0 56"/><path d="M110 40l70-16M110 62h72M110 84l70 16" stroke-dasharray="6 6"/><path d="M50 84v20M70 84v20"/>',
+ starter:'<circle cx="70" cy="62" r="34" '+F+'/><circle cx="70" cy="62" r="16"/><path d="M134 18l-24 44h22l-16 42 40-56h-24l18-30z" '+F+'/>',
+ fwb:wh(60,62,40)+'<path d="M36 46a28 28 0 0 1 48 0M36 78a28 28 0 0 0 48 0" stroke-width="5"/>'+'<rect x="120" y="30" width="22" height="12" rx="3"/><rect x="164" y="30" width="22" height="12" rx="3"/><rect x="120" y="82" width="22" height="12" rx="3"/><rect x="164" y="82" width="22" height="12" rx="3"/><path d="M131 42v40M175 42v40" stroke-dasharray="3 3"/>',
+ glass:'<path d="M40 100V26h120v74" stroke-width="5"/><path d="M46 30h108v66H46z" '+F+'/><path d="M100 60l-24-20M100 60l30-14M100 60l-10 30M100 60l26 22M100 60l-36 14"/><circle cx="100" cy="60" r="3"/>',
+ radio:'<rect x="40" y="44" width="100" height="56" rx="8" '+F+'/><circle cx="66" cy="72" r="14"/><path d="M92 62h36M92 72h36M92 82h36"/><path d="M150 38c10 8 10 24 0 32M164 30c16 12 16 36 0 48"/><path d="M90 44l-14-26"/>',
+ heater:'<rect x="40" y="56" width="80" height="44" rx="6" '+F+'/><path d="M50 66h60M50 78h60M50 90h60"/><path d="M140 30c-8 10 8 18 0 30s8 18 0 30M160 30c-8 10 8 18 0 30s8 18 0 30M180 30c-8 10 8 18 0 30"/>',
+ sealed:'<circle cx="70" cy="62" r="40" '+F+'/><circle cx="70" cy="62" r="28"/><path d="M50 62h40M70 42v40" stroke-opacity=".5"/><path d="M120 34l60-12M124 62h60M120 90l60 12"/>',
+ psteer:'<circle cx="80" cy="60" r="46" '+F+'/><circle cx="80" cy="60" r="12"/><path d="M80 14v34M34 60h34M92 60h34"/><path d="M140 30a40 40 0 0 1 20 50" stroke-width="4"/><path d="M152 80l8 4 6-8"/>',
+ pbrakes:'<circle cx="138" cy="60" r="38" '+F+'/><circle cx="138" cy="60" r="12"/><path d="M100 60H60"/><path d="M60 60l-24-40" stroke-width="5"/><rect x="18" y="12" width="30" height="12" rx="3" '+F+'/>',
+ ac:'<path d="M100 14v92M60 37l80 46M60 83l80-46"/><path d="M90 22l10 10 10-10M90 98l10-10 10 10M54 48l14 0-4-14M146 72l-14 0 4 14M54 72l14 0-4 14M146 48l-14 0 4-14"/><circle cx="100" cy="60" r="8" '+F+'/>',
+ belts:'<path d="M20 34c40 20 60 24 70 26M180 34c-40 20-60 24-70 26" stroke-width="8" stroke-opacity=".5"/><rect x="82" y="46" width="36" height="28" rx="6" '+F+'/><rect x="92" y="54" width="16" height="12" rx="2"/>',
+ disc:'<circle cx="84" cy="60" r="46" '+F+'/><circle cx="84" cy="60" r="14"/>'+Array.from({length:6},(_,i)=>{const a=i*Math.PI/3;return '<circle cx="'+(84+28*Math.cos(a)).toFixed(1)+'" cy="'+(60+28*Math.sin(a)).toFixed(1)+'" r="3"/>';}).join('')+'<path d="M118 22h24a10 10 0 0 1 10 10v56a10 10 0 0 1-10 10h-24z" '+F+'/>',
+ emis:'<path d="M14 70h90v16H14z" '+F+'/><path d="M104 74h14v8h-14"/><path d="M130 78c0-10 14-14 20-6 6-10 24-6 22 6 10 2 10 16-2 16h-36c-10 0-12-14-4-16z"/><path d="M150 40c10-14 30-14 34 0-14 6-26 6-34 0zM166 40v-10"/>',
+ // markets
+ seg_roadster:car('M14 90h172V76l-24-6-30-4-10-16h-8l-4 16H40l-26 10z',{win:'<path d="M122 52l-8 14"/>',extra:'<circle cx="80" cy="60" r="6"/>'}),
+ seg_truck:ground+'<path d="M15 88h170V64h-60V38H60L40 64H15z" '+F+'/><path d="M66 44h32v20H50z"/><path d="M110 64V48h70v16"/>'+wh(55,92,12)+wh(150,92,12),
+ seg_sedan:car('M12 92h176V64l-16-6-10-26H54L44 58H12z',{win:'<path d="M60 36h38v20H50zM106 36h40l8 20h-48z"/>',extra:'<path d="M102 60v30M140 60v30" stroke-opacity=".5"/>'}),
+ seg_coupe:car('M10 92h180V70l-26-8-22-24H86L64 62H14l-4 10z',{win:'<path d="M92 42h46l18 18H74z"/>',extra:'<path d="M120 64v26" stroke-opacity=".5"/>'}),
+ seg_wagon:car('M8 92h184V64H174l-6-26H70L54 62H12z',{win:'<path d="M74 42h30v18H64zM112 42h26v18h-26zM146 42h20l4 18h-24z"/>',extra:'<path d="M60 70h126M60 84h126" stroke-opacity=".5"/>'}),
+ seg_compact:car('M30 92h140V70l-16-6-14-22H80L66 64H34l-4 6z',{win:'<path d="M84 46h52l12 16H72z"/>',fx:62,rx:142,r:12}),
+ seg_pony:car('M8 92h184V74l-14-8-28-6-16-18h-34l-12 18H18l-10 8z',{win:'<path d="M118 46h28l12 14h-50z"/>',extra:'<path d="M20 72h70" stroke-opacity=".6"/>'})
+ };
+ return A;
+})();
+function ntOn(){try{return localStorage.getItem('marque-newtech')!=='off';}catch(e){return true;}}
+function ntItems(m){const out=[];if(!(m>0)) return out;
+  SEG_IDS.forEach(s=>{if(unlockM(SEG[s].from)===m) out.push({cat:(s==='truck'||s==='delivery')?'truck':'market',key:'seg_'+s,kind:'New market',name:SEG[s].name,text:SEG[s].desc});});
+  NT_CATS.forEach(([cat,label,list])=>list().forEach(c=>{if(unlockM(c.year)===m) out.push({cat,key:c.id,kind:label,name:c.name,text:NT_BLURB[c.name]||c.note||''});}));
+  return out;}
+function ntArt(x){return '<svg viewBox="0 0 200 120" class="nt-art" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+(NTA[x.key]||NT_ART[x.cat]||NT_ART.feature)+'</svg>';}
+function ntModal(md){const it=md.items||[];
+  return '<div class="eyebrow">'+dateLabel(md.m)+'</div><h2>'+(it.every(x=>x.kind==='New market')?'A new market opens':'New in the design studio')+'</h2>'+
+    '<div class="nt-list">'+it.map(x=>'<div class="nt-card">'+ntArt(x)+'<div class="nt-txt"><span class="nt-kind">'+x.kind+'</span><b>'+esc(x.name)+'</b>'+(x.text?'<p>'+esc(x.text)+'</p>':'')+'</div></div>').join('')+'</div>'+
+    '<div class="row"><button class="btn primary" data-act="ntdesign">Go to the design studio</button></div>';}
 // Starting build quality for new designs (Game menu → Settings). Kept per device.
 function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),10);if(v>=0&&v<=100) return Math.round(v/5)*5;}catch(e){}return 50;}
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1 (Sep 30, region cards 2)';
+const GAME_BUILD='1.0.1 (Oct 3, part pictures)';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -1707,7 +1895,7 @@ function simMonth(){_newsBack=0;
   state.m++;_newsBack=1;
   const nm=state.m;
   EVENTS.forEach(e=>{if(e.from===nm) addNews(e.name+'. '+e.text,'warn');if(e.to+1===nm) addNews(e.name+' is over. Demand is recovering.','good');});
-  [CHASSIS,SUSP,ENGINES,GEARS,BODIES,FEATURES].forEach(list=>list.forEach(c=>{if(unlockM(c.year)===nm&&nm>0) addNews('New in the design studio: '+c.name+'.','good');}));
+  [CHASSIS,SUSP,ENGINES,GEARS,BODIES,INTERIORS,FEATURES].forEach(list=>list.forEach(c=>{if(unlockM(c.year)===nm&&nm>0) addNews('New in the design studio: '+c.name+'.','good');}));
   SEG_IDS.forEach(s=>{if(unlockM(SEG[s].from)===nm&&nm>0) addNews('A new market opens: '+SEG[s].name+'. '+SEG[s].desc,'good');});
   if(nm%12===0){const r=taxRate(yearOf(nm));const r0=taxRate(yearOf(nm-1));if(r!==r0) addNews('The federal corporate tax rate is now '+(r*100).toFixed(1)+'%.','warn');}
 }
@@ -2316,7 +2504,7 @@ const CASHNOTE='<p class="hint"><b>Why cash and profit differ:</b> you pay for a
 function viewFinance(){
   const C=state.company,Y=yearOf(state.m);const H=state.fin.hist.slice(-12);
   const est=estTax(),qm=nextTaxMonth(state.m);
-  let h='<div class="grid2"><section class="panel"><h2>Cash and credit</h2><dl class="kv"><dt>Cash</dt><dd>'+money(C.cash)+'</dd><dt>Loan at '+(LOAN_RATE*100)+'%</dt><dd>'+money(C.loan)+'</dd>'+(C.emLoan>0?'<dt class="neg">Emergency loan at '+(EMER_RATE*100)+'%</dt><dd class="neg">'+money(C.emLoan)+'</dd>':'')+'<dt>Credit limit</dt><dd>'+money(maxLoan(Y))+' ('+money(Math.max(0,maxLoan(Y)-debt()))+' left)</dd><dt class="small muted">How the bank sets it</dt><dd class="small muted">'+money(baseLoan(Y))+' for any maker in '+Math.floor(Y)+(loanEarn()>0?', plus '+money(loanEarn())+' (twice your last 12 months of profit)':'. Profit over the last 12 months raises it')+'</dd><dt>Interest</dt><dd>'+money(C.loan*LOAN_RATE/12+(C.emLoan||0)*EMER_RATE/12)+'/mo</dd></dl>'+(C.emLoan>0?'<p class="hint">Repayments clear the emergency loan first.</p>':'')+
+  let h='<div class="grid2"><section class="panel"><h2>Cash and credit</h2><dl class="kv"><dt>Cash</dt><dd>'+money(C.cash)+'</dd><dt>Loan at '+(LOAN_RATE*100)+'%</dt><dd>'+money(C.loan)+'</dd>'+(C.emLoan>0?'<dt class="neg">Emergency loan at '+(EMER_RATE*100)+'%</dt><dd class="neg">'+money(C.emLoan)+'</dd>':'')+'<dt>Credit limit</dt><dd>'+money(maxLoan(Y))+' ('+money(Math.max(0,maxLoan(Y)-debt()))+' left)</dd><dt>Interest</dt><dd>'+money(C.loan*LOAN_RATE/12+(C.emLoan||0)*EMER_RATE/12)+'/mo</dd></dl>'+(C.emLoan>0?'<p class="hint">Repayments clear the emergency loan first.</p>':'')+
     '<div class="row"><input class="num" id="loan-amt" type="text" pattern="[0-9]*" autocomplete="off" inputmode="numeric" value="" placeholder="Amount" aria-label="Amount"><button class="btn" data-act="borrow">Borrow</button><button class="btn" data-act="repay" '+(debt()>0?'':'disabled')+'>Repay</button></div></section>';
   if(lv('books')<2) h+='<section class="panel"><h2>Tax</h2><p>'+(taxRate(Y)===0?'<b>There is no corporate income tax yet.</b> It starts in 1909 at 1% of profit and rises over the years. ':'')+'Tax is paid every quarter, at the end of March, June, September and December.</p><p>'+hireHint('books',2).replace('see this','get an estimate before each bill arrives')+'</p></section></div>';
   else h+=(lv('books')>=3?'':'')+'<section class="panel"><h2>Tax forecast</h2>'+(taxRate(Y)===0?'<p><b>No corporate income tax until 1909.</b> It starts at 1% of profit and rises over the years.</p>':'')+'<dl class="kv"><dt>Rate this year</dt><dd>'+(taxRate(Y)*100).toFixed(1)+'%</dd><dt>Profit so far this quarter</dt><dd>'+money(state.fin.qtd)+'</dd><dt>Estimated bill</dt><dd>'+money(est)+'</dd><dt>Due</dt><dd>End of '+MONTHS[qm%12]+' '+Math.floor(yearOf(qm))+'</dd></dl><p class="hint">Tax is paid each quarter (March, June, September, December) on that quarter\'s pre-tax profit. The estimate assumes the rest of the quarter looks like last month.</p></section></div>';
@@ -2341,10 +2529,10 @@ function viewStocks(){
   let h='<div class="grid2">';
   // net worth
   h+='<section class="panel"><div class="panel-head"><h2>Your fortune</h2><span class="muted small">Your score</span></div>'+
-    '<div class="kpis" style="grid-template-columns:repeat(2,1fr)"><div class="kpi"><label>Net worth</label><b>'+money(nw.total)+'</b><span>'+(me.hist.length>12?pctCh(nw.total,me.hist[me.hist.length-13])+' in a year':'')+'</span></div><div class="kpi"><label>Personal cash</label><b>'+money(me.cash)+'</b><span>Yours, not the company\'s</span></div></div>'+
+    '<div class="kpis" style="grid-template-columns:repeat(2,1fr)"><div class="kpi"><label>Net worth</label><b>'+money(nw.total)+'</b><span>'+(me.hist.length>12?pctCh(nw.total,me.hist[me.hist.length-13])+' in a year':'')+'</span></div><div class="kpi"><label>Personal cash</label><b>'+money(me.cash)+'</b></div></div>'+
     '<dl class="kv"><dt>Your stake in '+esc(C.name)+'</dt><dd>'+pct(q.own/q.shares)+' · '+money(nw.own)+'</dd><dt>Shares in other companies</dt><dd>'+money(nw.hold)+'</dd></dl>'+
     (me.hist.length>1?bigSpark(me.hist.slice(-60),300,50):'')+
-    '<p class="hint">Money reaches you personally through dividends from your company, dividends from shares you own, or selling shares. Company cash is not yours to spend.</p></section>';
+    '</section>';
   // own company
   h+='<section class="panel"><div class="panel-head"><h2>'+esc(C.name)+'</h2><span class="chip '+(q.pub?'good':'')+'">'+(q.pub?'Listed on the exchange':'Private')+'</span></div>';
   const e12=playerE12();
@@ -2430,8 +2618,9 @@ function renderModal(){
   if(md.type==='menu'){const sl=ui.slots;body='<h2>Game</h2><p class="muted">The game saves itself after every month. You can also save a copy at any point and come back to it later, and a copy is kept automatically at the start of each of the last '+AUTO_KEEP+' years.</p>'+
     '<h3>Saved games</h3><div class="row" style="flex-wrap:nowrap"><input id="slot-nm" class="txt" style="flex:1" maxlength="40" placeholder="'+esc(state.company.name+', '+dateLabel(state.m))+'"><button class="btn primary" data-act="slotsave">Save game</button></div>'+
     (sl==null?'<p class="small muted">Loading…</p>':!sl.length?'<p class="small muted">No saved games yet.</p>':'<div class="slotlist">'+sl.map(r=>'<div class="slot"><div><b>'+esc(r.name)+'</b>'+(r.auto?' <span class="chip">Auto</span>':'')+'<div class="small muted">'+esc(r.company)+' · '+dateLabel(r.m)+' · cash '+money(r.cash)+'</div></div><div class="row" style="flex-wrap:nowrap;margin:0"><button class="btn small" data-act="slotload" data-id="'+r.id+'">Load</button>'+(r.auto?'':'<button class="btn small" data-act="slotdel" data-id="'+r.id+'" aria-label="Delete '+esc(r.name)+'">Delete</button>')+'</div></div>').join('')+'</div>')+
-    '<h3>Settings</h3><p class="small muted">Game version '+GAME_BUILD+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:10px"><span>Starting build quality for new designs</span><select class="sel" data-chg="qdef" aria-label="Starting build quality for new designs">'+Array.from({length:21},(_,i)=>i*5).map(v=>'<option value="'+v+'"'+(v===qDefault()?' selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="row" style="gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-chg="hapset" '+(hapOn()?'checked':'')+'> <span>Vibration on iPhone (a buzz when a design finishes, a new part or market opens, you win a race or earn an achievement, or bad news arrives)</span></label><h3>Other devices</h3><p class="small muted">To move a game to another device, export it here and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
+    '<h3>Settings</h3><p class="small muted">Game version '+GAME_BUILD+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:10px"><span>Starting build quality for new designs</span><select class="sel" data-chg="qdef" aria-label="Starting build quality for new designs">'+Array.from({length:21},(_,i)=>i*5).map(v=>'<option value="'+v+'"'+(v===qDefault()?' selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="row" style="gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-chg="hapset" '+(hapOn()?'checked':'')+'> <span>Vibration on iPhone (a buzz when a design finishes, a new part or market opens, you win a race or earn an achievement, or bad news arrives)</span></label><label class="row" style="gap:8px;align-items:center;cursor:pointer;margin-top:8px"><input type="checkbox" data-chg="ntset" '+(ntOn()?'checked':'')+'> <span>Show a card when new parts or markets arrive</span></label><h3>Other devices</h3><p class="small muted">To move a game to another device, export it here and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
   else if(md.type==='luxsell'){const b=state.me.buys[md.i];const v=b?luxValue(b):0;body='<h2>Sell '+esc(b?b.nm:'')+'?</h2><dl class="kv"><dt>Paid</dt><dd>'+money(b?b.paid:0)+' in '+(b?dateShort(b.m):'')+'</dd><dt>Worth now</dt><dd>'+money(v)+'</dd><dt>You get</dt><dd><b>'+money(v*.95)+'</b> <span class="muted small">after 5% in fees</span></dd><dt>Upkeep saved</dt><dd>'+money(b?luxUpkeep(b):0)+' a month</dd></dl><p class="hint">Prices for homes, art and teams follow the economy, so selling in a slump gets less.</p><div class="row"><button class="btn primary" data-act="luxselldo">Sell it</button><button class="btn" data-act="closemodal">Keep it</button></div>';}
+  else if(md.type==='newtech'){body=ntModal(md);}
   else if(md.type==='era'){const c=CHECKPOINTS.find(x=>x.y===md.y);body='<div class="eyebrow">December '+md.y+'</div><h2>'+esc(c?c.name:'')+'</h2><p>A new era begins. Here is where '+esc(state.company.name)+' stands.</p>'+eraReport(md.y);}
   else if(md.type==='slotload'){const r=(ui.slots||[]).find(x=>x.id===md.id);body='<h2>Load this saved game?</h2>'+(r?'<p><b>'+esc(r.name)+'</b><br><span class="muted">'+esc(r.company)+' · '+dateLabel(r.m)+'</span></p>':'')+'<p>Your current game will be replaced. If you want to keep it, save it first from the Game menu.</p><div class="row"><button class="btn primary" data-act="slotloaddo">Load it</button><button class="btn" data-act="menu">Back</button></div>';}
   else if(md.type==='ach'){const got=state.ach||{};const life=achLife();const n=ACH.filter(a=>got[a.id]!=null).length;const pts=ACH.filter(a=>got[a.id]!=null).reduce((t,a)=>t+a.pts,0);
@@ -2520,6 +2709,7 @@ function endMonth(force){
   else if(state.over){ui.modal={type:'bankrupt'};}
   else if(_cp){ui.modal={type:'era',y:_cp.y};}
   else if(state.emerLast&&state.emerLast.m===state.m-1){ui.toast={title:'Emergency loan taken: '+money(state.emerLast.amt)+' at '+(EMER_RATE*100)+'%',text:'Dealer satisfaction fell 6 points and reputation 2 points in every region where you sell. Repay it from the Finance tab; repayments clear the emergency loan first.'};}
+  {const it=ntOn()?ntItems(state.m):[];if(it.length){const md={type:'newtech',items:it,m:state.m};if(ui.modal) ui.ntPending=md;else ui.modal=md;}}
   render();
 }
 const A={
@@ -2605,8 +2795,8 @@ const A={
   shipmode:el=>{const f=byId(state.factories,el.dataset.f);const Y=yearOf(state.m);if(el.dataset.mode==='exact'&&f.ship.mode!=='exact'){const ex={};Object.keys(f.prod).forEach(mid=>{const p=f.prod[mid];const n=Math.min(p.target,prodCap(f,mid,p.lines,Y));ex[mid]=shipPlan(f,mid,n,Y)||{};});f.ship.exact=ex;}if(el.dataset.mode==='auto'&&!f.ship.serve){const sv={};REGIONS.forEach(r=>{if(!hasDealers(r.id)) return;const ex=f.ship.exact||{};if(f.ship.mode==='manual'&&+f.ship.shares[r.id]>0) sv[r.id]=true;if(f.ship.mode==='exact'&&Object.values(ex).some(m=>+m[r.id]>0)) sv[r.id]=true;});if(!Object.keys(sv).length&&hasDealers(f.region)) sv[f.region]=true;f.ship.serve=sv;}f.ship.mode=el.dataset.mode;save();render();},
   scrapask:el=>{ui.modal={type:'scrap',id:el.dataset.id,r:el.dataset.r};render();},
   scrapdo:()=>{const md=ui.modal;const x=byId(state.models,md.id);const sc=scrapCalc(md.id,md.r);if(!sc.u){ui.modal=null;render();return;}sc.regs.forEach(k=>{if(state.stock[md.id][k]) state.stock[md.id][k]={u:0,c:0};});state.company.cash+=sc.salvage;x.scrapPending=(x.scrapPending||0)+sc.loss;x.life.scrap=(x.life.scrap||0)+sc.loss;x.life.profit-=sc.loss;addNews('Scrapped '+int(sc.u)+' unsold '+x.name+' car'+(sc.u===1?'':'s')+' for parts. Recovered '+money(sc.salvage)+', a loss of '+money(sc.loss)+'.','warn');ui.modal=null;save();render();},
-  raceenter:el=>{const k=el.dataset.k;const sel=document.getElementById('race-'+k);if(!sel) return;const fee=raceFee(yearOf(state.m));if(state.company.cash<fee){msg('Not enough cash','The entry fee is '+money(fee)+'.');return;}state.company.cash-=fee;state.fin.racePending=(state.fin.racePending||0)+fee;state.races.fees=state.races.fees||{};state.races.fees[k]=fee;state.races.entries[k]=sel.value;const ev=racesMonths(state.m,6).find(e=>e.key===k);ui.toast={title:'The '+esc(byId(state.models,sel.value).name)+' is entered in the '+RACE_TYPES[ev.type].name.toLowerCase()+' at '+REG[ev.region].city,text:'Paid '+money(fee)+'. The event runs in '+dateLabel(ev.m)+'; results come in the news at the end of that month.'};save();render();window.scrollTo(0,0);},
-  racewd:el=>{const k=el.dataset.k;const fee=(state.races.fees||{})[k]||0;state.company.cash+=fee;state.fin.racePending=Math.max(0,(state.fin.racePending||0)-fee);delete state.races.entries[k];ui.toast={title:'Entry withdrawn',text:'Your '+money(fee)+' entry fee has been refunded.'};save();render();},
+  raceenter:el=>{const k=el.dataset.k;const sel=document.getElementById('race-'+k);if(!sel) return;const fee=raceFee(yearOf(state.m));if(state.company.cash<fee){msg('Not enough cash','The entry fee is '+money(fee)+'.');return;}state.company.cash-=fee;state.fin.racePending=(state.fin.racePending||0)+fee;state.races.fees=state.races.fees||{};state.races.fees[k]=fee;state.races.entries[k]=sel.value;const ev=racesMonths(state.m,6).find(e=>e.key===k);const _y=window.scrollY;save();render();window.scrollTo(0,_y);},
+  racewd:el=>{const k=el.dataset.k;const fee=(state.races.fees||{})[k]||0;state.company.cash+=fee;state.fin.racePending=Math.max(0,(state.fin.racePending||0)-fee);delete state.races.entries[k];const _y=window.scrollY;save();render();window.scrollTo(0,_y);},
   upgradeask:el=>{ui.modal={type:'upgrade',f:el.dataset.f,to:el.dataset.to};render();},
   upgradedo:()=>{const md=ui.modal;const f=byId(state.factories,md.f);const to=byId(METHODS,md.to);const c=upgradeCost(f,to,yearOf(state.m));f.upgrade={to:to.id,monthsLeft:UPGRADE_MONTHS,costLeft:c};addNews('Upgrade started at '+f.name+': '+to.name.toLowerCase()+' ('+money(c)+').','info');ui.toast={title:f.name+' upgrade ordered',text:to.name+', ready in '+dateLabel(state.m+UPGRADE_MONTHS)+'. '+money(c)+' paid over '+UPGRADE_MONTHS+' months.'};ui.modal=null;save();render();window.scrollTo(0,0);},
   selregion:el=>{const r=el.dataset.r;ui.region=ui.region===r?null:r;render();if(ui.region){const row=document.querySelector('tr[data-act=selregion][data-r="'+r+'"]');if(row&&el.tagName!=='TR') row.scrollIntoView({block:'start',behavior:'smooth'});}},
@@ -2650,7 +2840,8 @@ const A={
     if(!home){if(err) err.textContent='Choose the region where your company starts.';document.getElementById('ng-home').focus();return;}const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});save();render();},
   copyexport:()=>{const ta=document.getElementById('exp-text');const m=document.getElementById('copy-msg');const done=()=>{if(m) m.textContent='Copied.';};try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';});}catch(e){ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';}},
   doimport:()=>{const t=document.getElementById('imp-text').value;try{const p=JSON.parse(t);if(!p||p.v!==1||!p.company) throw new Error('bad');state=migrate(p);ui.modal=null;ui.prev=null;ui.design=null;save();render();}catch(e){const er=document.getElementById('imp-err');if(er) er.textContent='That text is not a Marque save. Paste the whole export, from the first { to the last }.';}},
-  closemodal:()=>{ui.modal=null;render();},
+  closemodal:()=>{ui.modal=ui.ntPending||null;ui.ntPending=null;render();},
+  ntdesign:()=>{ui.modal=null;ui.ntPending=null;ui.tab='design';render();window.scrollTo(0,0);},
   owneropen:()=>{ui.modal={type:'owner'};render();},
   owpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ow-first'),l=document.getElementById('ow-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
   owsave:()=>{const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const f=cap((document.getElementById('ow-first').value||'').trim()),l=cap((document.getElementById('ow-last').value||'').trim());if(!f||!l){msg('Name needed','Enter a first and last name.');return;}const had=!state.owner;state.owner={first:f,last:l};if(had) (state.me.buys||[]).forEach(b=>{if(b.nm) b.nm=b.nm.replace(/\bFounder\b/g,l);});ui.modal=null;ui.toast={title:'Name saved',text:'You are '+esc(f+' '+l)+', founder of '+esc(state.company.name)+'.'};save();render();},
@@ -2683,6 +2874,7 @@ const CHG={
   bfnfix:el=>{if(ui.modal&&(!el.value||isNaN(parseInt(el.value,10)))){el.value=ui.modal.lines||1;}else if(ui.modal&&String(ui.modal.lines)!==el.value){render();}},
   islvar:el=>{const md=ui.modal;if(!md) return;const was=md.v;md.v=el.value;const L=ownerLast();const def={isle:L+' Island',baja:'Rancho '+L};if(!md.nm||md.nm===def[was]||md.nm===fillName('{L} Island')) md.nm=def[md.v];render();},
   qdef:el=>{try{localStorage.setItem('marque-quality',String(parseInt(el.value,10)||50));}catch(e){}},
+  ntset:el=>{try{localStorage.setItem('marque-newtech',el.checked?'on':'off');}catch(e){}},
   hapset:el=>{try{localStorage.setItem('marque-haptics',el.checked?'on':'off');}catch(e){}if(el.checked) hap('light');},
   shipserve:el=>{const f=byId(state.factories,el.dataset.f);if(!f.ship.serve){f.ship.serve={};REGIONS.forEach(r=>{if(hasDealers(r.id)) f.ship.serve[r.id]=true;});}if(el.checked) f.ship.serve[el.dataset.r]=true;else delete f.ship.serve[el.dataset.r];save();render();},
   share:el=>{const f=byId(state.factories,el.dataset.f);f.ship.shares[el.dataset.r]=clamp(Math.round(+el.value||0),0,100);save();render();}
