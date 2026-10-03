@@ -136,6 +136,7 @@ input.txt{width:100%}
 .lastrace{border:2px solid var(--accent);border-radius:8px;padding:10px 14px;margin:6px 0 12px;background:var(--accent-soft)}.lastrace h3{margin:0}.lr-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line)}
 .nt-list{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow:auto}.nt-card{display:flex;flex-direction:column;gap:10px;border:2px solid var(--brass);border-radius:8px;padding:10px;background:var(--surface);box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 4px var(--brass)}.nt-art{display:block;width:100%;height:120px;padding:10px 0;color:var(--accent);background:radial-gradient(ellipse at center,var(--good-bg),var(--bg) 75%);border-radius:4px}.nt-txt{padding:0 6px 4px}.nt-txt{display:flex;flex-direction:column;gap:2px;min-width:0}.nt-kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}.nt-txt b{font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}.nt-txt p{margin:4px 0 0;font-size:14px}
 .fpick{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}.fpick-row{all:unset;box-sizing:border-box;display:block;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}.fpick-row.sel{outline:2px solid var(--accent);border-color:var(--accent)}.fp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.fp-top b{font-size:16px}.fp-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.fp-st span{display:flex;flex-direction:column;font-family:var(--mono);font-size:15px;font-weight:600}.fp-st i{font-style:normal;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted)}
+table.grid.wtbl th,table.grid.wtbl td{padding-left:3px;padding-right:3px;letter-spacing:0}
 .regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
@@ -229,13 +230,18 @@ select.sel{width:100%;max-width:100%}
   .dbar.flash{animation:dbflash .6s}
   @keyframes dbflash{from{background:var(--accent-soft)}to{background:var(--surface)}}
   .dbar-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-  .dbar-row.sm{grid-template-columns:repeat(6,1fr);margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
+  .dbar-row.sm,.dbar-row.dw{grid-template-columns:52px repeat(6,1fr)}
+  .dbar-row.sm{margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
+  .dw-l{align-items:flex-start!important;justify-content:center;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .dw-h{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:4px 0 1px;padding-top:3px;border-top:1px solid var(--line)}
+  .dbar-row.dw>div:not(.dw-l){font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .dbar-row.dw>div.top{color:var(--ink);font-weight:700}
   .dbar-row>div{display:flex;flex-direction:column;align-items:center;line-height:1.1;min-width:0}
   .dbar-row span{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
   .dbar-row b{font-family:var(--mono);font-size:15px;font-weight:600}
   .dbar-row.sm b{font-size:13px}
   .dbar-row i{font-style:normal;font-family:var(--mono);font-size:10.5px;font-weight:600}
-  .has-dbar .wrap{padding-bottom:190px}
+  .has-dbar .wrap{padding-bottom:250px}
   .xtbl thead{display:none}.xtbl,.xtbl tbody{display:block}
   .xtbl tr{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
   .xtbl td{display:flex;flex-direction:column;align-items:flex-start;text-align:left!important;padding:0!important;border:0!important}
@@ -399,7 +405,7 @@ const MAT_IDX=[[1900,1],[1908,.92],[1913,.8],[1916,.8],[1918,1.15],[1920,1.2],[1
 const WAGE=[[1900,.16],[1910,.22],[1914,.30],[1920,.55],[1925,.58],[1930,.60],[1933,.52],[1937,.72],[1941,.85],[1945,1.1],[1950,1.4],[1955,1.75],[1960,2.15],[1965,2.55],[1970,3.35]];
 const HOURS=[[1900,1],[1908,.6],[1913,.3],[1916,.12],[1920,.08],[1925,.05],[1930,.045],[1940,.038],[1950,.032],[1960,.026],[1970,.022]];
 // Basic output per line grows gently with better tools and skills; the big jumps come from upgrading the production method.
-const CAP=[[1900,6],[1905,20],[1910,80],[1913,110],[1916,150],[1920,210],[1925,300],[1930,450],[1940,560],[1950,700],[1960,860],[1970,1000]];
+const CAP=[[1900,6],[1905,20],[1910,80],[1913,100],[1916,130],[1920,185],[1925,300],[1930,450],[1940,560],[1950,700],[1960,860],[1970,1000]];
 const CAP_V1=[[1900,6],[1905,20],[1910,80],[1913,250],[1916,500],[1920,800],[1925,1400],[1930,1800],[1940,2200],[1950,2800],[1960,3500],[1970,4200]];
 const METHOD_CAP_V1={hand:1,machine:1.2,jigs:1.45,line:1.9,conveyor:2.2,transfer:2.6,automation:3.0};
 const matIdx=Y=>interp(MAT_IDX,Y);
@@ -420,8 +426,8 @@ const METHODS=[
  {id:'automation',name:'Automation and computer control',year:1965,cap:8.5,lab:.38,cost:3.3,fixed:1.62,desc:'Automatic welders and computer-run machines take on the repetitive work.'}
 ];
 const meth=f=>byId(METHODS,(f&&f.method)||'hand')||METHODS[0];
-const LEARN_M=8;
-const learnCap=(f,mid)=>{const p=f&&f.prod&&f.prod[mid];const e=p?(p.exp||0):0;return 1+.25*(1-Math.exp(-e/LEARN_M));};
+const LEARN_M=12;
+const learnCap=(f,mid)=>{const p=f&&f.prod&&f.prod[mid];const e=p?(p.exp||0):0;return 1+.12*(1-Math.exp(-e/LEARN_M));};
 const learnLab=(f,mid)=>{const p=f&&f.prod&&f.prod[mid];const e=p?(p.exp||0):0;return 1-.15*(1-Math.exp(-e/LEARN_M));};
 const prodCap=(f,mid,lines,Y)=>Math.floor(lines*capPerLine(Y)*meth(f).cap*learnCap(f,mid));
 const upgradeCost=(f,to,Y)=>Math.max(0,(to.cost-meth(f).cost))*f.lines*2500*costIdx(Y)*Math.pow(capPerLine(Y)/6,.7)*REG[f.region].build;
@@ -1393,7 +1399,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1 (Oct 3, gifts list)';
+const GAME_BUILD='1.0.1 (Oct 3, design bar weights)';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -1620,6 +1626,8 @@ function makeModel(name,spec,dy){
 const activeModels=()=>state.models.filter(x=>x.status!=='retired');
 function stockTotal(mid){const s=state.stock[mid]||{};return Object.values(s).reduce((a,x)=>a+x.u,0);}
 function avgSold(mdl,n){const h=mdl.hist.slice(-n);if(!h.length) return 0;return h.reduce((a,x)=>a+x.sold,0)/h.length;}
+// How many months of stock is "a lot": 2 for a small maker, rising to 6 as the dealer network spreads (each region needs cars on the lots).
+function coverLimit(){const n=REGIONS.filter(r=>hasDealers(r.id)).length;return Math.max(2,Math.min(6,Math.round((1+n*.42)*2)/2));}
 function coverMonths(mdl){const s=stockTotal(mdl.id),a=avgSold(mdl,3);if(!a) return s>0?Infinity:null;return s/a;}
 function estimateUnitCost(mdl,f,m){
   const Y=yearOf(m);const mat=mdl.car.materials*matIdx(Y);const lab=mdl.car.laborHours*interp(HOURS,Y)*laborMult()*meth(f).lab*learnLab(f,mdl.id)*hourlyWage(f.region,Y);
@@ -1920,7 +1928,7 @@ function computeAlerts(){
     if(x.status==='active'&&!onLine&&!stockTotal(x.id)) out.push({sev:'warn',text:'The '+esc(x.name)+' is not assigned to any factory line, so nothing is being built.',act:'factories'});
     if(!h) return;
     if(h.missed>=5&&h.missed>.1*h.demand){if(inLaunch(x,h.m)) out.push({sev:'info',text:'Strong launch for the '+esc(x.name)+': '+int(h.missed)+' more buyers wanted one than you had in stock. New models get a couple of months to catch up, so this does not hurt your reputation yet. Build and ship more.',sel:x.id});else out.push({sev:'warn',text:'The '+esc(x.name)+' missed '+int(h.missed)+' sales last month ('+pct(h.missed/Math.max(1,h.demand))+' of demand).',sel:x.id});}
-    const cv=coverMonths(x);if(x.status==='active'&&cv!=null&&cv>2&&cv!==Infinity) out.push({sev:'warn',text:'The '+esc(x.name)+' has '+cv.toFixed(1)+' months of stock on hand.',sel:x.id});
+    const cv=coverMonths(x);if(x.status==='active'&&cv!=null&&cv>coverLimit()&&cv!==Infinity) out.push({sev:'warn',text:'The '+esc(x.name)+' has '+cv.toFixed(1)+' months of stock on hand.',sel:x.id});
     const h2=x.hist[x.hist.length-2];if(lv('books')>=1&&h.profit<0&&h2&&h2.profit<0) out.push({sev:'bad',text:'The '+esc(x.name)+' has lost money two months running.',sel:x.id});
   });
   state.factories.forEach(f=>{
@@ -2060,7 +2068,7 @@ function fleetTable(){
   return h;
 }
 function soldSince(x,n){const from=state.m-n;return x.hist.filter(h=>h.m>=from).reduce((a,h)=>a+h.sold,0);}
-function coverChip(c){if(c==null) return '<span class="muted">—</span>';if(c===Infinity) return '<span class="chip warn">No sales</span>';const cls=c>2?'warn':c<.5?'bad':'good';return '<span class="chip '+cls+'">'+c.toFixed(1)+' mo</span>';}
+function coverChip(c){if(c==null) return '<span class="muted">—</span>';if(c===Infinity) return '<span class="chip warn">No sales</span>';const cls=c>coverLimit()?'warn':c<.5?'bad':'good';return '<span class="chip '+cls+'">'+c.toFixed(1)+' mo</span>';}
 
 /* ----- models ----- */
 function retiredSpan(x){const a=x.launchM!=null?x.launchM:(x.hist[0]?x.hist[0].m:state.m);const b=x.retiredM!=null?x.retiredM:(x.hist.length?x.hist[x.hist.length-1].m:state.m);return {a,b,mo:Math.max(1,b-a+1)};}
@@ -2224,7 +2232,7 @@ function designPreview(){
   if(d.replaces){const par=byId(state.models,d.replaces);if(par){const carry=Math.round((par.fame||0)*(par.seg===s?.75:.4));h+='<div class="alert info"><span class="chip info">Successor</span><span>Replaces the <b>'+esc(par.name)+'</b>. Starts with about <b>'+carry+'</b> nameplate reputation ('+fameWord(carry).toLowerCase()+')'+(par.seg!==s?', less than usual since it is a different kind of car':'')+'.</span></div>';}}
   {const et=engType(d.spec.engine);h+='<p class="small"><b>'+POWER[et].name+':</b> '+(et==='gas'&&Y>=1912?'The electric starter makes gasoline cars easy to start. Fuel is everywhere.':POWER[et].note)+(et==='gas'&&!d.spec.features.includes('starter')?' Without an electric starter, buyers must crank it by hand, which costs comfort.':'')+'</p>';}
   h+='<dl class="kv"><dt>Power</dt><dd>'+Math.round(car.hp)+' hp</dd><dt>Weight</dt><dd>'+int(car.weight)+' kg</dd><dt>Power to weight</dt><dd>'+car.raw.pw.toFixed(1)+' hp/t (a typical new car: '+eraBaseline(Y).pw.toFixed(0)+')</dd></dl>';
-  h+='<h3>What buyers weigh in a '+SEG[s].name.toLowerCase()+'</h3><div class="tablewrap"><table class="grid"><thead><tr><th class="tl">Buyer</th>'+RATING_KEYS.map(k=>'<th>'+RATING_NAMES[k].slice(0,4)+'.</th>').join('')+'<th>Your score</th></tr></thead><tbody>'+CLS_IDS.map(c=>'<tr><td class="tl">'+CLASSES[c].name+'</td>'+RATING_KEYS.map(k=>'<td class="num">'+Math.round(WEIGHTS[s][c][k]*100)+'%</td>').join('')+'<td class="num"><b>'+scoreFor(rt,s,c).toFixed(0)+'</b></td></tr>').join('')+'</tbody></table></div>';
+  h+='<h3>What buyers weigh in a '+SEG[s].name.toLowerCase()+'</h3><div class="tablewrap"><table class="grid wtbl"><thead><tr><th class="tl">Buyer</th>'+RATING_KEYS.map(k=>'<th>'+RATING_NAMES[k].slice(0,4)+'</th>').join('')+'</tr></thead><tbody>'+CLS_IDS.map(c=>'<tr><td class="tl">'+CLASSES[c].name+'</td>'+RATING_KEYS.map(k=>'<td class="num">'+Math.round(WEIGHTS[s][c][k]*100)+'%</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   h+='<h3>Cost per car at '+esc(f.name)+'</h3>'+(lv('factory')>=2?'<dl class="kv"><dt>Materials</dt><dd>'+money(mat)+'</dd><dt>Labor ('+Math.round(car.laborHours*interp(HOURS,Y))+' h at $'+hourlyWage(f.region,Y).toFixed(2)+'/h)</dt><dd>'+money(lab)+'</dd><dt>Overhead (at 80% use)</dt><dd>'+money(ovh)+'</dd><dt><b>Total at factory</b></dt><dd><b>'+money(unit)+'</b></dd></dl>':'<dl class="kv"><dt><b>Total at factory</b></dt><dd><b>'+(lv('factory')>=1?money(unit):rough(unit))+'</b></dd></dl><p>'+hireHint('factory',2).replace('see this','see the materials, labor and overhead split')+'</p>');
   const dc=designCost(car,Y);
   const dmo=designMonths(car);const rdt=rdTiers();const rdOn=RD_IDS.filter(k=>rdt[k]);
@@ -2239,8 +2247,11 @@ function designBar(){
   const cell=(l,v,d)=>'<div><span>'+l+'</span><b>'+v+'</b>'+d+'</div>';
   const top=CLS_IDS.map(c=>cell({low:'Working',mid:'Middle',up:'Wealthy'}[c]||CLASSES[c].name,cur.score[c].toFixed(0),dl(cur.score[c],pv&&pv.score[c],true))).join('')+
     cell('Cost',lv('factory')>=1?money(cur.unit):rough(cur.unit),lv('factory')>=1?dl(cur.unit,pv&&pv.unit,false,v=>'$'+Math.round(v)):'')+cell('Power',Math.round(cur.hp)+'hp',dl(cur.hp,pv&&pv.hp,true));
-  const bot=RATING_KEYS.map(k=>cell(RATING_NAMES[k].slice(0,4),cur.rt[k],dl(cur.rt[k],pv&&pv.rt[k],true))).join('');
-  return '<div class="dbar-row">'+top+'</div><div class="dbar-row sm">'+bot+'</div>';
+  const bot='<div class="dw-l"><span>Car</span></div>'+RATING_KEYS.map(k=>cell(RATING_NAMES[k].slice(0,4),cur.rt[k],dl(cur.rt[k],pv&&pv.rt[k],true))).join('');
+  // What each buyer group cares about in this segment, lined up under the ratings.
+  const W=WEIGHTS[cur.seg]||{};
+  const wrows=CLS_IDS.map(c=>{const w=W[c]||{};const mx=Math.max(...RATING_KEYS.map(k=>w[k]||0));return '<div class="dbar-row dw"><div class="dw-l">'+({low:'Working',mid:'Middle',up:'Wealthy'}[c]||CLASSES[c].name)+'</div>'+RATING_KEYS.map(k=>{const v=Math.round((w[k]||0)*100);return '<div class="'+((w[k]||0)===mx?'top':'')+'">'+v+'%</div>';}).join('')+'</div>';}).join('');
+  return '<div class="dbar-row">'+top+'</div><div class="dbar-row sm">'+bot+'</div><div class="dw-h">What each buyer weighs</div>'+wrows;
 }
 function designSnapNow(){
   const d=ui.design,Y=yearOf(state.m),s=d.spec.segment;const car=computeCar(withRd(d.spec),Y);const rt=ratingsAt(car,Y,Y);const f=designFactoryObj();
@@ -2314,7 +2325,7 @@ function factoryPanel(f){
    h+='<div class="field"><label>Production method</label><div class="row"><b>'+M.name+'</b><span class="hint">'+M.desc+' Output ×'+M.cap.toFixed(2)+', labor ×'+M.lab.toFixed(2)+'.</span></div>'+
    (f.upgrade?'<p class="small"><span class="chip warn">Upgrading</span> Switching to <b>'+byId(METHODS,f.upgrade.to).name+'</b>, ready in '+f.upgrade.monthsLeft+' mo. '+money(f.upgrade.costLeft)+' still to pay. The factory keeps running meanwhile.</p>':
     nexts.length?'<div class="row">'+nexts.map(x=>'<button class="btn" data-act="upgradeask" data-f="'+f.id+'" data-to="'+x.id+'">Upgrade to '+x.name.toLowerCase()+' · '+money(upgradeCost(f,x,Y))+'</button>').join('')+'</div>':'<p class="hint">This is the most advanced method available in '+Math.floor(Y)+'.</p>')+
-   '<p class="hint">Crews also get faster the longer they build the same model: up to 25% more output and 15% less labor after about two years. Moving a model to a new line starts a new crew.</p></div>';}
+   '<p class="hint">Crews also get faster the longer they build the same model: up to 12% more output and 15% less labor over about three years. Moving a model to a new line starts a new crew.</p></div>';}
   h+=govFactoryBlock(f);
   h+='<dl class="kv"><dt>Fixed cost</dt><dd>'+money(factoryFixed(f.lines,Y,meth(f)))+' / month</dd><dt>Built last month</dt><dd>'+int(f.last?f.last.built:0)+' cars</dd>'+(lv('factory')>=1?'<dt>Overhead per car last month</dt><dd>'+(f.last&&f.last.built?money(f.last.ovhUnit):'—')+'</dd>':'')+'</dl>';
   // production table
