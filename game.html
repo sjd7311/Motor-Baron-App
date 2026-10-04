@@ -134,9 +134,11 @@ input.txt{width:100%}
 .dstep{gap:6px;margin-bottom:6px}.dstep .btn{min-width:40px;min-height:36px;font-size:18px}
 .warn-t{color:var(--warn)}
 .lastrace{border:2px solid var(--accent);border-radius:8px;padding:10px 14px;margin:6px 0 12px;background:var(--accent-soft)}.lastrace h3{margin:0}.lr-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line)}
+.tochoice.tri{grid-template-columns:1fr}@media (min-width:600px){.tochoice.tri{grid-template-columns:1fr 1fr 1fr}}
 .nt-list{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow:auto}.nt-card{display:flex;flex-direction:column;gap:10px;border:2px solid var(--brass);border-radius:8px;padding:10px;background:var(--surface);box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 4px var(--brass)}.nt-art{display:block;width:100%;height:120px;padding:10px 0;color:var(--accent);background:radial-gradient(ellipse at center,var(--good-bg),var(--bg) 75%);border-radius:4px}.nt-txt{padding:0 6px 4px}.nt-txt{display:flex;flex-direction:column;gap:2px;min-width:0}.nt-kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}.nt-txt b{font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}.nt-txt p{margin:4px 0 0;font-size:14px}
 .fpick{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}.fpick-row{all:unset;box-sizing:border-box;display:block;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}.fpick-row.sel{outline:2px solid var(--accent);border-color:var(--accent)}.fp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.fp-top b{font-size:16px}.fp-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.fp-st span{display:flex;flex-direction:column;font-family:var(--mono);font-size:15px;font-weight:600}.fp-st i{font-style:normal;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted)}
 table.grid.wtbl th,table.grid.wtbl td{padding-left:3px;padding-right:3px;letter-spacing:0}
+.amedal{width:44px;height:44px;flex:none}.amedal.big{width:56px;height:56px}.ach .amedal{filter:grayscale(1)}.ach.got .amedal{filter:none}.ach.life .amedal{filter:grayscale(.6)}
 .regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
@@ -429,7 +431,7 @@ const meth=f=>byId(METHODS,(f&&f.method)||'hand')||METHODS[0];
 const LEARN_M=12;
 const learnCap=(f,mid)=>{const p=f&&f.prod&&f.prod[mid];const e=p?(p.exp||0):0;return 1+.12*(1-Math.exp(-e/LEARN_M));};
 const learnLab=(f,mid)=>{const p=f&&f.prod&&f.prod[mid];const e=p?(p.exp||0):0;return 1-.15*(1-Math.exp(-e/LEARN_M));};
-const prodCap=(f,mid,lines,Y)=>Math.floor(lines*capPerLine(Y)*meth(f).cap*learnCap(f,mid));
+const prodCap=(f,mid,lines,Y)=>Math.floor(lines*capPerLine(Y)*meth(f).cap*learnCap(f,mid)*outMult(f));
 const upgradeCost=(f,to,Y)=>Math.max(0,(to.cost-meth(f).cost))*f.lines*2500*costIdx(Y)*Math.pow(capPerLine(Y)/6,.7)*REG[f.region].build;
 const UPGRADE_MONTHS=4;
 const landCost=(rid,n,Y)=>Math.round((800+700*n)*costIdx(Y)*gF(Y)*(.4+1.2*REG[rid].urb));
@@ -806,6 +808,85 @@ function rivalBankrupt(rv,m){
   if(h) delete state.me.hold[rv.id];
   state.rivals.filter(o=>o.owner===rv.id&&o.active).forEach(o=>rivalBankrupt(o,m));
 }
+
+/* ----- Difficulty, rivals fighting back, price pressure, labor ----- */
+const DIFF={
+ easy:{name:'Relaxed',d:'Rivals mostly leave you alone and prices hold up. The way the game first played.',agg:0,press:0,cost:0},
+ normal:{name:'Standard',d:'Rivals cut prices and bring out new cars when you take their buyers, buyers get pickier about price as the market matures, and big companies face labor trouble.',agg:1,press:1,cost:1},
+ hard:{name:'Cutthroat',d:'Rivals fight hard for every buyer, prices fall fast, and labor costs bite.',agg:1.6,press:1.5,cost:1.5}
+};
+const DIFF_IDS=['easy','normal','hard'];
+const dif=()=>DIFF[(state&&state.diff)||'normal']||DIFF.normal;
+// Buyers grow more price-sensitive as a segment matures and more makers crowd in.
+function segMature(s,Y){return clamp((Y-SEG[s].from-2)/10,0,1);}
+function priceSens(s,Y){return 1+.6*dif().press*segMature(s,Y);}
+// A famous name helps, but past a point buyers stop paying extra for it.
+function repTerm(rep){const p=dif().press;const x=rep>70&&p?70+(rep-70)*(1-.5*Math.min(1,p)):rep;return .02*(x-50);}
+// Rivals in a segment where you hold a big share cut prices, push reputation and bring out new models early.
+function rivalFight(m,Y,announce){
+  const D=dif();state.fight=state.fight||{};if(!state.market) return;
+  const mine={};state.models.forEach(x=>{const h=x.hist[x.hist.length-1];if(h&&h.m===m-1) mine[x.seg]=(mine[x.seg]||0)+(h.sold||0);});
+  SEG_IDS.forEach(s=>{
+    const tot=((state.market.segs||{})[s]||{}).sold||0;const sh=tot>0?(mine[s]||0)/tot:0;
+    const f=state.fight[s]||(state.fight[s]={cut:1,told:false});
+    if(D.agg>0&&sh>.15){const target=1-Math.min(.35,(.08+(sh-.15)*.6)*D.agg);f.cut=Math.max(target,f.cut-.035*D.agg);
+      if(!f.told&&announce&&f.cut<.97){f.told=true;addNews('Rival makers are cutting prices on '+SEG[s].name.toLowerCase()+' cars to win back buyers from '+state.company.name+'.','warn');}}
+    else{f.cut=Math.min(1,f.cut+.02);if(f.cut>=.995) f.told=false;}
+    state.rivals.forEach(rv=>{
+      if(!rv.active||rv.owner==='player') return;
+      const def=byId(RIVAL_DEFS,rv.id);
+      rv.models.forEach(rm=>{if(rm.seg!==s) return;const uc=rivalUnitCost(rm,rv,Y);rm.price=Math.round(Math.max(uc*1.04,uc*rv.markup*rvPriceMult(rv)*f.cut)/5)*5;});
+      if(D.agg>0&&sh>.3){
+        const rm=rv.models.find(x=>x.seg===s);
+        if(rm&&m-rm.launchM>=30&&rnd()<.2*D.agg){rivalLaunch(rv,s,m,announce);}
+        const cap=(def&&def.weak?45:72)+8*D.agg;rv.rep=Math.min(cap,rv.rep+.4*D.agg);
+      }
+    });
+  });
+}
+function fightCut(s){return state&&state.fight&&state.fight[s]?state.fight[s].cut:1;}
+// Labor: big employers pay a little more; strikes; Ford's Five-Dollar Day in 1914.
+function wageMult(){const D=dif();const b=builtLast();
+  const size=clamp(Math.log10(Math.max(1,b)/500)/2,0,1);return (1+.12*D.cost*size)*(state.five==='yes'?1.6:1)*unionWage();}
+function builtLast(){return state.factories.reduce((a,f)=>a+((f.last&&f.last.built)||0),0);}
+function outMult(f){const Y=yearOf(state.m);return (state.five==='yes'?1.05:state.five==='no'&&Y<1920?.92:1)*(f&&f.strike>0?(f.sit?0:.5):1);}
+function strikeOdds(Y){return Y>=1910&&Y<1923?1:Y>=1933&&Y<1942?1.6:Y>=1945&&Y<1951?1.2:.3;}
+// Crew turnover, % of a factory's workers who quit each year. High turnover slows how fast crews improve.
+function turnover(f){const Y=yearOf(state.m);
+  let t=interp([[1900,45],[1910,70],[1913,260],[1916,130],[1920,110],[1925,80],[1930,45],[1933,20],[1937,35],[1942,60],[1946,45],[1955,30],[1970,35]],Y);
+  if(state.five==='yes') t*=.35;if(state.union==='yes') t*=.6;
+  const ass=Object.keys(f.prod||{});if(ass.length){const full=ass.filter(mid=>{const p=f.prod[mid];const c=prodCap(f,mid,p.lines,Y);return c>0&&p.target>=c*.95;}).length;if(full===ass.length) t*=1.25;}
+  return Math.round(t);}
+function learnRate(f){const D=dif();return D.cost?Math.max(.2,1-turnover(f)/100*.32*D.cost):1;}
+function strikeOdds(Y){return Y>=1910&&Y<1923?1:Y>=1933&&Y<1942?1.6:Y>=1942&&Y<1945.6?.12:Y>=1945.6&&Y<1951?1.4:.35;}
+function laborModal(){if(!state||state.over) return null;if(state.fivePending&&!state.five) return {type:'fiveday'};if(state.unionPending&&!state.union) return {type:'union'};if(state.contractPending) return {type:'contract'};return null;}
+function biggestFactory(){return state.factories.filter(f=>!f.building).sort((a,b)=>Object.values(b.prod||{}).reduce((t,p)=>t+p.lines,0)-Object.values(a.prod||{}).reduce((t,p)=>t+p.lines,0))[0];}
+function startStrike(f,months,sit,announce){if(!f) return;f.strike=months;f.sit=!!sit;if(announce) addNews(sit?'Sit-down strike! Workers occupy '+f.name+' and production there stops for about '+months+' month'+(months>1?'s':'')+'.':'Workers walk out at '+f.name+'. Output there is cut in half for '+(months>1?'about '+months+' months':'a month')+'.','bad');}
+function laborMonth(m,Y,announce){
+  const D=dif();if(!D.cost){state.factories.forEach(f=>{f.strike=0;f.sit=false;});return;}
+  state.peakBuilt=Math.max(state.peakBuilt||0,builtLast());
+  state.factories.forEach(f=>{
+    if(f.strike>0){f.strike--;if(!f.strike){f.sit=false;if(announce) addNews('The strike at '+f.name+' is over. Full output resumes.','good');}return;}
+    if(f.building) return;const lines=Object.values(f.prod||{}).reduce((a,p)=>a+p.lines,0);if(lines<6) return;
+    const p=.004*D.cost*strikeOdds(Y)*Math.min(3,lines/10)*(state.five==='no'&&Y<1920?1.8:state.five==='yes'?.5:1)*(state.union==='yes'?.4:state.union==='fight'?1.5:1);
+    if(rnd()<p) startStrike(f,1+(rnd()<.4?1:0),false,announce);
+  });
+  if(Y>=1914&&!state.five&&builtLast()>=1500) state.fivePending=true;
+  const lines=state.factories.reduce((a,f)=>a+f.lines,0);
+  if(Y>=1937&&!state.union&&(builtLast()>=1000||lines>=8)) state.unionPending=true;
+  if(state.union==='fight'){
+    if(m%12===6&&Y<1941&&rnd()<.35*Math.min(1.5,D.cost)) startStrike(biggestFactory(),1+Math.floor(rnd()*2),true,announce);
+    if(m>=unlockM(1941)+5){state.union='yes';state.unionW=1.2;state.contractM=m+36;if(announce) addNews('Under pressure from Washington and a strike that shuts the industry, '+state.company.name+' finally recognizes the union. Wages rise about 20%.','warn');}
+  }
+  if(state.union==='yes'&&state.contractM&&m>=state.contractM){if(Y>=1942&&Y<1946) state.contractM=unlockM(1946);else state.contractPending=true;}
+}
+// Guards while fighting the union, and pensions after 1950. Paid from company cash each month.
+function laborCosts(P,Y){const D=dif();let c=0;if(!D.cost) return;
+  if(state.union==='fight') c+=state.factories.filter(f=>!f.building).length*1500*costIdx(Y);
+  if(Y>=1950) c+=pensionCost(Y);
+  if(c){state.company.cash-=c;P.labor=(P.labor||0)+c;}}
+function pensionCost(Y){const D=dif();if(!D.cost||Y<1950) return 0;return ((state.peakBuilt||0)*.4+builtLast()*.6)*interp([[1950,0],[1953,5],[1960,15],[1970,35]],Y)*D.cost*(state.union==='yes'?1:.6);}
+function unionWage(){return state.union==='yes'?(state.unionW||1.15):1;}
 function updateRivals(m,announce){
   const Y=yearOf(m);
   {const sil=state.rivals.filter(r=>r.silent&&!r.active);if(announce&&sil.length) addNews((()=>{const t=sil.map(r=>r.name).join(', ');return 'The stock exchange is open. Newer carmakers are already selling: '+t+(t.endsWith('.')?'':'.')+' See the Stocks tab.';})(),'rival');}
@@ -834,6 +915,7 @@ function updateRivals(m,announce){
     });
     if(m%12===0){rv.rep=Math.min(def.weak?45:72,rv.rep+(def.weak?.15:.4));rv.models.forEach(rm=>rm.price=Math.round(rivalUnitCost(rm,rv,Y)*rv.markup*rvPriceMult(rv)/5)*5);}
   });
+  if(announce&&(m%3===0||m%12===0)) rivalFight(m,Y,announce);else if(announce&&state.fight) state.rivals.forEach(rv=>{if(rv.active&&rv.owner!=='player') rv.models.forEach(rm=>{const c=fightCut(rm.seg);if(c<1&&rm.launchM===m){const uc=rivalUnitCost(rm,rv,Y);rm.price=Math.round(Math.max(uc*1.04,uc*rv.markup*rvPriceMult(rv)*c)/5)*5;}});});
 }
 function rivalsFinance(P,m,Y){
   state.rivals.forEach(rv=>{
@@ -1204,6 +1286,80 @@ const ACH=[
  {id:'billionaire',pts:40,name:'Billionaire',d:'Reach a personal net worth of $1,000,000,000.',t:()=>state.me&&netWorth().total>=1e9},
  {id:'end_era',pts:45,name:'The End of an Era',d:'Reach December 1970 still in business.',t:()=>state.m>=FULL_END_M&&!state.over}
 ];
+// One drawing per achievement (viewBox 0 0 120 120, line art in currentColor), shown on a medal.
+const ACH_ART=(()=>{
+ const F='fill="currentColor" fill-opacity=".18"';
+ const car=(x,y,s)=>'<g transform="translate('+x+' '+y+') scale('+s+')"><path d="M0 22h60v-8l-8-3-7-11H18L11 11H2L0 15z" '+F+'/><path d="M20 3h11v8H15zM35 3h9l5 8H35z"/><circle cx="15" cy="23" r="6"/><circle cx="46" cy="23" r="6"/></g>';
+ const coin='<circle cx="60" cy="60" r="26" '+F+'/><circle cx="60" cy="60" r="20"/><path d="M60 46v28M66 50c-4-3-12-3-12 3s12 4 12 10-8 6-12 3"/>';
+ const factory=(x,s)=>'<g transform="translate('+x+' 0) scale('+s+')"><path d="M14 92V56l18 12V56l18 12V56l18 12V34h12v58z" '+F+'/><path d="M70 34V18h8v16"/><path d="M22 82h8M40 82h8M58 82h8"/></g>';
+ const person=(x,y)=>'<circle cx="'+x+'" cy="'+(y-12)+'" r="6"/><path d="M'+(x-9)+' '+(y+12)+'c0-12 4-18 9-18s9 6 9 18"/>';
+ const flag='<path d="M40 96V24"/><path d="M40 26h44v30H40" '+F+'/><path d="M40 26h11v10H40zM62 26h11v10H62zM51 36h11v10H51zM73 36h11v10H73zM40 46h11v10H40zM62 46h11v10H62z" fill="currentColor"/>';
+ const trophy='<path d="M42 28h36v18c0 14-8 22-18 22s-18-8-18-22z" '+F+'/><path d="M42 34H32c0 12 6 16 12 16M78 34h10c0 12-6 16-12 16M60 68v12M46 92h28l-4-12H50z"/>';
+ const house='<path d="M28 58L60 32l32 26" /><path d="M36 52v40h48V52" '+F+'/><path d="M54 92V72h12v20"/><path d="M42 62h8v8h-8zM70 62h8v8h-8z"/>';
+ const temple=(top)=>'<path d="M24 46L60 26l36 20z" '+F+'/><path d="M26 92h68M30 86h60M34 50v34M48 50v34M72 50v34M86 50v34"/>'+(top||'');
+ const chart='<path d="M24 92h74M24 92V24"/><path d="M30 80l18-14 14 8 26-30" stroke-width="5"/><path d="M80 44h8v8"/>';
+ const map='<path d="M20 40l26-8 28 8 26-8v52l-26 8-28-8-26 8z" '+F+'/><path d="M46 32v52M74 40v52"/>';
+ const A={
+ first_design:'<path d="M22 30h76v56H22z" '+F+'/><path d="M28 70h36M28 78h22"/>'+car(34,36,.85)+'<path d="M84 22l12 12-30 30-14 2 2-14z"/>',
+ first_factory:factory(0,1)+'<path d="M48 92V76h14v16" />',
+ first_dealer:'<path d="M18 44h84l-6-16H24z" '+F+'/><path d="M22 44v48h76V44M30 52h28v24H30zM66 52h24v40"/>'+'<path d="M18 44c4 8 10 8 14 0 4 8 10 8 14 0 4 8 10 8 14 0 4 8 10 8 14 0 4 8 10 8 14 0 4 8 10 8 14 0"/>',
+ first_sale:'<path d="M20 86h80"/>'+car(14,50,.6)+'<path d="M66 66h34v-8H66z" '+F+'/><path d="M74 58V40h18v18"/><text x="83" y="53" font-size="11" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">$</text>',
+ in_black:'<path d="M28 24h52l12 12v60H28z" '+F+'/><path d="M80 24v12h12M38 46h40M38 56h40M38 66h28"/><path d="M38 80h40" stroke-width="5"/><path d="M84 66l6 6 10-14"/>',
+ sold_1k:car(10,30,.75)+car(52,30,.75)+car(30,62,.75)+'<path d="M20 100h80" stroke-opacity=".5"/>',
+ sold_100k:car(8,30,.55)+car(44,30,.55)+car(80,30,.55)+car(26,58,.55)+car(62,58,.55)+'<text x="60" y="104" font-size="14" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">100,000</text>',
+ sold_1m:'<circle cx="60" cy="60" r="36" '+F+'/><path d="M24 60h72M60 24v72M34 36c16 10 36 10 52 0M34 84c16-10 36-10 52 0"/>'+car(38,46,.72),
+ sold_10m:map+car(30,46,.5)+car(62,56,.5)+car(44,70,.45),
+ million_month:coin+'<path d="M20 36h16M84 36h16M20 84h16M84 84h16" stroke-opacity=".6"/><path d="M28 22l6 8M92 22l-6 8M28 98l6-8M92 98l-6-8"/>',
+ bootstrapped:'<path d="M42 92V60l-6-26h20l4 22h24c8 0 12 4 12 10v26z" '+F+'/><path d="M56 34c0-8 6-12 10-6M36 92h60M46 70h40"/>',
+ debt_free:'<path d="M26 30h50l14 14v50H26z" '+F+'/><path d="M38 50h36M38 62h28M38 74h20"/><path d="M20 98L98 20" stroke-width="6"/>',
+ five_regions:map+'<circle cx="34" cy="50" r="4" fill="currentColor"/><circle cx="56" cy="60" r="4" fill="currentColor"/><circle cx="86" cy="48" r="4" fill="currentColor"/><circle cx="66" cy="74" r="4" fill="currentColor"/><circle cx="40" cy="72" r="4" fill="currentColor"/>',
+ coast_coast:map+'<path d="M24 62c20-14 52 14 74-6" stroke-width="5" stroke-dasharray="2 7"/><circle cx="24" cy="62" r="5" fill="currentColor"/><circle cx="98" cy="56" r="5" fill="currentColor"/>',
+ offices:'<path d="M30 92V30h40v62" '+F+'/><path d="M70 50h22v42H70"/><path d="M38 40h8M54 40h8M38 54h8M54 54h8M38 68h8M54 68h8M78 60h8M78 72h8M44 92V80h12v12M22 92h76"/>',
+ three_factories:'<g transform="translate(0 34)">'+factory(4,.45)+factory(36,.45)+factory(68,.45)+'</g><path d="M14 76h92"/>',
+ moving_line:'<path d="M14 84h92" stroke-width="5"/><circle cx="20" cy="94" r="6"/><circle cx="60" cy="94" r="6"/><circle cx="100" cy="94" r="6"/>'+car(8,60,.5)+car(42,60,.5)+car(76,60,.5)+'<path d="M50 30h24M66 22l8 8-8 8"/>',
+ automation:'<path d="M20 96h40V84H20z" '+F+'/><path d="M40 84V60l28-20 18 10"/><circle cx="40" cy="60" r="6"/><circle cx="68" cy="40" r="6"/><path d="M86 50l8-8M86 50l10 4"/><path d="M90 66l6-6M98 72l8-2M92 76l4 8" stroke-opacity=".7"/>',
+ veteran_crew:person(42,64)+person(78,64)+'<path d="M28 94h64"/><path d="M50 36h20l-10-12z" '+F+'/>',
+ full_lineup:car(4,40,.5)+car(40,40,.5)+car(76,40,.5)+car(4,72,.5)+car(40,72,.5)+car(76,72,.5),
+ critics:'<path d="M60 18l11 22 24 4-17 17 4 24-22-11-22 11 4-24-17-17 24-4z" '+F+'/><path d="M50 98h20"/>',
+ household:'<path d="M28 30h64v60H28z" '+F+'/><path d="M28 46h64M36 58h20M36 66h20M36 74h20M36 82h20"/>'+car(60,56,.5)+'<path d="M34 38h52" stroke-width="5"/>',
+ dynasty:car(26,22,.6)+car(26,50,.6)+car(26,78,.6)+'<path d="M20 34v56M16 34h8M16 62h8M16 90h8"/>',
+ pony:'<path d="M30 86c0-24 8-38 22-44l4-14 8 10c12 2 22 10 26 22l-8 4-10-6-6 10v18" '+F+'/><path d="M40 86v12M74 74v24M56 30c4-6 10-6 12 0"/><circle cx="66" cy="42" r="2" fill="currentColor"/>',
+ compact:car(26,46,1.1)+'<path d="M18 34h20M18 34v8M102 34H82M102 34v8" stroke-opacity=".6"/>',
+ race_win:flag,
+ race_legend:trophy+'<path d="M52 44h16" stroke-opacity=".6"/><text x="60" y="54" font-size="14" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">25</text>',
+ research:'<path d="M48 22h24M52 22v26L32 88c-2 6 2 8 8 8h40c6 0 10-2 8-8L68 48V22" '+F+'/><path d="M40 72h40"/><circle cx="54" cy="80" r="3"/><circle cx="66" cy="84" r="2"/>',
+ full_staff:person(30,66)+person(60,58)+person(90,66)+'<path d="M16 94h88"/><path d="M54 30h12l-6 6z" fill="currentColor"/>',
+ ipo:temple('<path d="M50 100h20" />'),
+ split:'<circle cx="60" cy="60" r="34" '+F+'/><path d="M60 22v76" stroke-width="5" stroke-dasharray="6 5"/><path d="M40 44v32M80 44v32"/>',
+ dividend:coin.replace(/60" cy="60/g,'40" cy="64').replace('M60 46v28M66 50c-4-3-12-3-12 3s12 4 12 10-8 6-12 3','M40 50v28M46 54c-4-3-12-3-12 3s12 4 12 10-8 6-12 3')+'<path d="M76 26h20v30H76z" '+F+'/><path d="M80 34h12M80 42h12M80 50h8M70 64h22M84 56l8 8-8 8"/>',
+ investor:'<path d="M26 22h50l14 14v62H26z" '+F+'/><path d="M76 22v14h14"/><text x="58" y="56" font-size="13" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">SHARE</text><path d="M36 66h44M36 76h44M36 86h24"/>',
+ millionaire:'<path d="M30 58h60v34H30z" '+F+'/><path d="M30 58l10-18h40l10 18M30 72h60M60 58v34"/>'+coin.replace(/r="26"/,'r="0"').replace(/r="20"/,'r="0"').replace('M60 46v28M66 50c-4-3-12-3-12 3s12 4 12 10-8 6-12 3','M60 20v14M66 22c-4-3-12-3-12 3s12 4 12 10-8 6-12 3'),
+ tycoon:'<path d="M30 74h60" stroke-width="5"/><path d="M40 74V34c0-6 40-6 40 0v40" '+F+'/><path d="M40 62h40" stroke-width="5"/><path d="M92 30v62M92 30c0-6 10-6 10 0"/>',
+ takeover:car(14,36,.55)+'<path d="M58 52h16"/><path d="M68 44l8 8-8 8"/>'+'<rect x="80" y="30" width="26" height="40" rx="3" '+F+'/><path d="M86 40h14M86 50h14M86 60h8"/><path d="M24 92h72" stroke-opacity=".5"/><path d="M40 80h40"/>',
+ absorb:'<circle cx="46" cy="60" r="26" '+F+'/><circle cx="74" cy="60" r="26"/><path d="M60 40v40" stroke-opacity=".5"/>',
+ holding:'<path d="M60 20v26M30 70V54h60v16M60 46v24"/><rect x="48" y="14" width="24" height="14" rx="3" '+F+'/><rect x="18" y="70" width="24" height="14" rx="3" '+F+'/><rect x="48" y="70" width="24" height="14" rx="3" '+F+'/><rect x="78" y="70" width="24" height="14" rx="3" '+F+'/>',
+ trustbuster:'<path d="M60 22v70M30 92h60M36 30h48"/><path d="M36 30L24 58h24zM84 30L72 58h24z" '+F+'/><circle cx="60" cy="22" r="4"/>',
+ number_one:'<path d="M18 96V70h28v26M46 96V50h28v46M74 96V78h28v18" '+F+'/><text x="60" y="44" font-size="22" fill="currentColor" stroke="none" text-anchor="middle" font-weight="800">1</text><text x="32" y="64" font-size="14" fill="currentColor" stroke="none" text-anchor="middle">2</text><text x="88" y="72" font-size="14" fill="currentColor" stroke="none" text-anchor="middle">3</text>',
+ gov_contract:temple('<path d="M60 26V12M60 12h16v8H60" />'),
+ war_work:'<path d="M20 74h60l6-14h14v14h6v12H20z" '+F+'/><path d="M30 60h40l-6-14H40zM70 54l26-8"/><circle cx="32" cy="88" r="7"/><circle cx="56" cy="88" r="7"/><circle cx="88" cy="88" r="7"/><path d="M52 34l8-8 8 8-8 8z" fill="currentColor"/>',
+ survive_crash:'<path d="M20 30l18 26 14-10 22 34 26-8" stroke-width="5"/><path d="M84 96c0-14 6-24 16-30" /><path d="M28 98h70" stroke-opacity=".5"/><path d="M90 60l10 6-2 12"/>',
+ first_home:house,
+ gilded:'<path d="M20 60h80M26 60v34M94 60v34M20 94h80" '+F+'/><path d="M20 60l40-30 40 30M38 72h10v22H38zM56 72h8v10h-8zM72 72h10v22H72zM56 30v-8h8v12"/><path d="M50 60c0-8 20-8 20 0" />',
+ railcar:'<path d="M18 46h84v34H18z" '+F+'/><path d="M14 46h92M26 56h12v12H26zM46 56h12v12H46zM66 56h12v12H66zM86 56h8v20M14 92h92"/><circle cx="32" cy="86" r="6"/><circle cx="48" cy="86" r="6"/><circle cx="72" cy="86" r="6"/><circle cx="88" cy="86" r="6"/>',
+ spender:'<path d="M30 46h60l-6 48H36z" '+F+'/><path d="M44 46c0-18 32-18 32 0M44 60h32"/><path d="M60 14l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="currentColor"/>',
+ patron:'<path d="M18 74c10-6 20-6 30 0l16 4c6 2 6 8 0 8H48" /><path d="M18 94l10-4 26 4 30-14c6-2 8 4 4 8L58 102 18 100" '+F+'/><path d="M70 30c0-10 16-10 16 0 0 10-16 22-16 22s-16-12-16-22c0-10 16-10 16 0" fill="currentColor" fill-opacity=".35"/>',
+ libraries:'<path d="M20 90V28M100 90V28"/><path d="M28 34h8v56h-8zM40 40h8v50h-8zM52 30h10v60H52zM66 44h8v46h-8zM78 34h8v56h-8z" '+F+'/><path d="M16 90h88"/>',
+ university:'<path d="M60 22l44 18-44 18-44-18z" '+F+'/><path d="M34 48v22c0 8 52 8 52 0V48M96 44v28"/><circle cx="96" cy="76" r="4" fill="currentColor"/>',
+ benefactor:'<path d="M24 60h72v36H24z" '+F+'/><path d="M20 48h80v12H20zM60 48v48M60 48c-14-20-30-14-20-2M60 48c14-20 30-14 20-2"/>',
+ ten_million:'<path d="M24 92h72"/><path d="M30 92V76h60v16M36 76V62h48v14M42 62V48h36v14" '+F+'/><path d="M50 40c0-10 20-10 20 0" />',
+ billionaire:'<path d="M26 96l8-46 26 24 26-24 8 46z" '+F+'/><circle cx="34" cy="44" r="5"/><circle cx="60" cy="30" r="5"/><circle cx="86" cy="44" r="5"/><path d="M26 86h68"/>',
+ end_era:'<path d="M60 20l6 16 18-4-8 16 16 10-18 4 4 18-18-10-18 10 4-18-18-4 16-10-8-16 18 4z" '+F+'/>'+car(30,82,.98).replace('scale(0.98)','scale(1)').replace('translate(30 82)','translate(30 82) scale(.98)')
+ };
+ return A;
+})();
+// A medal for an achievement: bronze, silver or gold rim by points, with its drawing on green.
+function achMedal(a,cls){const t=a.pts<15?['#f0b478','#8a5520']:a.pts<30?['#eeeff2','#8b8d93']:['#f6de8c','#a4801f'];const g='mg'+a.id;
+  return '<svg class="amedal '+(cls||'')+'" viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="'+g+'" cx=".35" cy=".3"><stop offset="0" stop-color="'+t[0]+'"/><stop offset="1" stop-color="'+t[1]+'"/></radialGradient></defs><circle cx="60" cy="60" r="58" fill="url(#'+g+')"/><circle cx="60" cy="60" r="50" fill="#1d5842"/><circle cx="60" cy="60" r="47" fill="none" stroke="'+t[0]+'" stroke-opacity=".7" stroke-width="1.5"/><g fill="none" stroke="#f6f0dc" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" style="color:#f6f0dc" transform="translate(60 60) scale(.72) translate(-60 -60)">'+(ACH_ART[a.id]||'')+'</g></svg>';}
 function achLife(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return {};}}
 // Game Center on iPhone (full game). The native side is the small MotorBaronGameCenter plugin.
 // Haptics on iPhone: a small tap or buzz for things that happen. Off switch in the Game menu.
@@ -1399,7 +1555,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1 (Oct 3, design bar weights)';
+const GAME_BUILD='1.0.1 (Oct 4, labor)';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -1630,7 +1786,7 @@ function avgSold(mdl,n){const h=mdl.hist.slice(-n);if(!h.length) return 0;return
 function coverLimit(){const n=REGIONS.filter(r=>hasDealers(r.id)).length;return Math.max(2,Math.min(6,Math.round((1+n*.42)*2)/2));}
 function coverMonths(mdl){const s=stockTotal(mdl.id),a=avgSold(mdl,3);if(!a) return s>0?Infinity:null;return s/a;}
 function estimateUnitCost(mdl,f,m){
-  const Y=yearOf(m);const mat=mdl.car.materials*matIdx(Y);const lab=mdl.car.laborHours*interp(HOURS,Y)*laborMult()*meth(f).lab*learnLab(f,mdl.id)*hourlyWage(f.region,Y);
+  const Y=yearOf(m);const mat=mdl.car.materials*matIdx(Y);const lab=mdl.car.laborHours*interp(HOURS,Y)*laborMult()*meth(f).lab*learnLab(f,mdl.id)*hourlyWage(f.region,Y)*wageMult()*(1+.04*turnover(f)/100*dif().cost);
   const cap=capPerLine(Y)*meth(f).cap*Math.max(1,f.lines);const ovh=factoryFixed(f.lines,Y,meth(f))/Math.max(1,cap*.8);
   return {mat,lab,ovh,total:mat+lab+ovh};
 }
@@ -1727,6 +1883,7 @@ function simMonth(){_newsBack=0;
   });
   // rivals
   updateRivals(m,true);
+  laborMonth(m,yearOf(m),true);
   govMonthStart(m);
 
   // production
@@ -1749,7 +1906,7 @@ function simMonth(){_newsBack=0;
     plan.forEach(({mdl,n})=>{
       if(n<=0) return;
       const mat=mdl.car.materials*matIdx(Y),lab=mdl.car.laborHours*interp(HOURS,Y)*laborMult()*meth(f).lab*learnLab(f,mdl.id)*hourlyWage(f.region,Y);
-      if(f.prod[mdl.id]) f.prod[mdl.id].exp=(f.prod[mdl.id].exp||0)+1;
+      if(f.prod[mdl.id]) f.prod[mdl.id].exp=(f.prod[mdl.id].exp||0)+learnRate(f);
       {const use=Math.min(f.matCredit||0,n*mat);if(use) f.matCredit-=use;C.cash-=n*(mat+lab)-use;}
       acc[mdl.id].built+=n;acc[mdl.id].cost[f.id]={mat,lab,ovh,n};
       f.last.byModel[mdl.id]={n,mat,lab,ovh};
@@ -1783,9 +1940,9 @@ function simMonth(){_newsBack=0;
         const N=base*rw[r.id]*ss[s]*cs[c]*noise;
         mk.segs[s].potential+=N;mk.regions[r.id].potential+=N;
         if(!cands.length) return;
-        const e=CLASSES[c].e,ref=refPrice(c,s,Y);
+        const e=CLASSES[c].e*priceSens(s,Y),ref=refPrice(c,s,Y);
         let tot=Math.exp(U0);
-        cands.forEach(cd=>{const sc=scoreFor(ratingCache[cd.x.id],s,c);cd.u=Math.exp(.075*sc-e*Math.log(cd.price/ref)+.02*(cd.rep-50)+Math.log(cd.cov)+(cd.bonus||0)+powerBonus(engType(cd.x.spec.engine),c,r.id,Y));tot+=cd.u;});
+        cands.forEach(cd=>{const sc=scoreFor(ratingCache[cd.x.id],s,c);cd.u=Math.exp(.075*sc-e*Math.log(cd.price/ref)+(cd.k==='o'?repTerm(cd.rep):.02*(cd.rep-50))+Math.log(cd.cov)+(cd.bonus||0)+powerBonus(engType(cd.x.spec.engine),c,r.id,Y));tot+=cd.u;});
         cands.forEach(cd=>{
           const d=N*cd.u/tot;
           if(cd.k==='o'){(nd[cd.x.id]||(nd[cd.x.id]={}))[r.id]=((nd[cd.x.id]||{})[r.id]||0)+d;}
@@ -1869,7 +2026,8 @@ function simMonth(){_newsBack=0;
   rivalsFinance(P,m,Y);rivalsCorporate(m,Y);antitrustMonth(P,m,Y);
   // interest
   if(C.loan>0||C.emLoan>0){P.interest=C.loan*LOAN_RATE/12+(C.emLoan||0)*EMER_RATE/12;C.cash-=P.interest;}
-  P.pretax=P.rev-P.dealer-P.cogs-P.storage-P.scrap-P.idle-P.branch-P.design-P.staff-P.racing-P.interest-(P.fines||0)+(P.subs||0)+(P.gov||0);state.fin.racePending=0;
+  laborCosts(P,Y);
+  P.pretax=P.rev-P.dealer-P.cogs-P.storage-P.scrap-P.idle-P.branch-P.design-P.staff-P.racing-P.interest-(P.fines||0)-(P.labor||0)+(P.subs||0)+(P.gov||0);state.fin.racePending=0;
   state.fin.qtd+=P.pretax;
   if(m%3===2){P.tax=Math.max(0,state.fin.qtd)*taxRate(Y);C.cash-=P.tax;if(P.tax>0) addNews('Quarterly tax paid: '+money(P.tax)+'.','info');state.fin.qtd=0;}
   P.net=P.pretax-P.tax;
@@ -1987,7 +2145,7 @@ function render(){
       ((ui.tab==='design'&&ui.designOpen)?'':'<button class="btn primary" data-act="end" '+(state.over||state.m>=END_M?'disabled':'')+'>End '+MON3[state.m%12]+' '+Math.floor(Y)+' ›</button>')+
     '</div></div>'+
     '<nav class="tabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('')+'</nav></div></header>';
-  h+='<main class="wrap">'+(ui.achNew&&ui.achNew.length?'<div class="achbar" role="status"><span class="medal"></span><div><b>Achievement unlocked</b><div class="small">'+ui.achNew.map(esc).join(' · ')+'</div></div><button class="btn small" data-act="achclose">OK</button></div>':'')+(ui.toast?'<div class="toast" role="status"><span class="chip good">Done</span><div><b>'+ui.toast.title+'</b><div class="small">'+ui.toast.text+'</div></div><button class="btn small" data-act="closetoast" aria-label="Dismiss">OK</button></div>':'')+({overview:viewOverview,models:viewModels,design:viewDesign,factories:viewFactories,regions:viewRegions,market:viewMarket,racing:viewRacing,finance:viewFinance,stocks:viewStocks,fortune:viewFortune,staff:viewStaff,news:viewNews}[ui.tab])()+'</main>';
+  h+='<main class="wrap">'+(ui.achNew&&ui.achNew.length?'<div class="achbar" role="status">'+(()=>{const a=ACH.find(x=>x.name===ui.achNew[ui.achNew.length-1]);return a?achMedal(a,'big'):'<span class="medal"></span>';})()+'<div><b>Achievement unlocked</b><div class="small">'+ui.achNew.map(esc).join(' · ')+'</div></div><button class="btn small" data-act="achclose">OK</button></div>':'')+(ui.toast?'<div class="toast" role="status"><span class="chip good">Done</span><div><b>'+ui.toast.title+'</b><div class="small">'+ui.toast.text+'</div></div><button class="btn small" data-act="closetoast" aria-label="Dismiss">OK</button></div>':'')+({overview:viewOverview,models:viewModels,design:viewDesign,factories:viewFactories,regions:viewRegions,market:viewMarket,racing:viewRacing,finance:viewFinance,stocks:viewStocks,fortune:viewFortune,staff:viewStaff,news:viewNews}[ui.tab])()+'</main>';
   const designing=ui.tab==='design'&&ui.designOpen;
   if(!designing) h+='<div class="endbar"><button class="btn primary" data-act="end" '+(state.over||state.m>=END_M?'disabled':'')+'>End '+MON3[state.m%12]+' '+Math.floor(Y)+' ›</button></div>';
   h+=renderModal();
@@ -2277,7 +2435,7 @@ function compareView(){
 function viewFactories(){
   const Y=yearOf(state.m);
   let h='<div class="panel-head"><h2>Factories</h2><button class="btn" data-act="buildfactory">Build a new factory</button></div>';
-  h+='<p class="muted small">Each factory decides what it builds and where its cars go. Basic line capacity this year: <b class="mono">'+int(capPerLine(Y))+'</b> cars per line per month, before production methods and crew experience.</p>';
+  h+='<p class="muted small">Each factory decides what it builds and where its cars go. Basic line capacity this year: <b class="mono">'+int(capPerLine(Y))+'</b> cars per line per month, before production methods and crew experience.</p>'+(dif().cost&&(state.union||state.five)?'<p class="small"><b>Labor:</b> '+[state.five==='yes'?'Five-Dollar Day pay':state.five==='no'?'Held wages in 1914':'',state.union==='yes'?'Union shop, wages +'+Math.round(((state.unionW||1.15)-1)*100)+'%'+(state.contractM?', next contract '+dateLabel(state.contractM):''):state.union==='fight'?'Fighting the union':'',yearOf(state.m)>=1950?'Pensions '+money(pensionCost(yearOf(state.m)))+'/mo':''].filter(Boolean).join(' · ')+'</p>':'');
   if(!state.factories.length) h+='<div class="empty">You have no factory yet. A small two-line works in 1900 costs about '+money(8000*.3+2*lineCost(state.company.home,Y))+' and takes 7 months to build.</div>';
   if(state.factories.length>1){
     if(!state.factories.some(f=>f.id===ui.fsel)) ui.fsel=state.factories[0].id;
@@ -2325,7 +2483,7 @@ function factoryPanel(f){
    h+='<div class="field"><label>Production method</label><div class="row"><b>'+M.name+'</b><span class="hint">'+M.desc+' Output ×'+M.cap.toFixed(2)+', labor ×'+M.lab.toFixed(2)+'.</span></div>'+
    (f.upgrade?'<p class="small"><span class="chip warn">Upgrading</span> Switching to <b>'+byId(METHODS,f.upgrade.to).name+'</b>, ready in '+f.upgrade.monthsLeft+' mo. '+money(f.upgrade.costLeft)+' still to pay. The factory keeps running meanwhile.</p>':
     nexts.length?'<div class="row">'+nexts.map(x=>'<button class="btn" data-act="upgradeask" data-f="'+f.id+'" data-to="'+x.id+'">Upgrade to '+x.name.toLowerCase()+' · '+money(upgradeCost(f,x,Y))+'</button>').join('')+'</div>':'<p class="hint">This is the most advanced method available in '+Math.floor(Y)+'.</p>')+
-   '<p class="hint">Crews also get faster the longer they build the same model: up to 12% more output and 15% less labor over about three years. Moving a model to a new line starts a new crew.</p></div>';}
+   '<p class="hint">Crews also get faster the longer they build the same model: up to 12% more output and 15% less labor over about three years. Moving a model to a new line starts a new crew.</p>'+(dif().cost?'<p class="small"><b>Crew turnover:</b> about '+turnover(f)+'% of workers quit each year'+(turnover(f)>=120?' (very high)':turnover(f)>=60?' (high)':'')+', so crews here learn at '+Math.round(learnRate(f)*100)+'% speed.'+(f.strike>0?' <span class="chip bad">'+(f.sit?'Sit-down strike':'On strike')+'</span>':'')+'</p>':'')+'</div>';}
   h+=govFactoryBlock(f);
   h+='<dl class="kv"><dt>Fixed cost</dt><dd>'+money(factoryFixed(f.lines,Y,meth(f)))+' / month</dd><dt>Built last month</dt><dd>'+int(f.last?f.last.built:0)+' cars</dd>'+(lv('factory')>=1?'<dt>Overhead per car last month</dt><dd>'+(f.last&&f.last.built?money(f.last.ovhUnit):'—')+'</dd>':'')+'</dl>';
   // production table
@@ -2541,7 +2699,7 @@ function viewFinance(){
     const rl=[['Revenue',p=>p.rev-p.dealer],['Costs',p=>(p.rev-p.dealer-p.net)],['Profit',p=>p.net],['Cash change',p=>p.cashStart!=null?p.cash-p.cashStart:NaN],['Cash at month end',p=>p.cash]];
     return h+'<section class="panel"><div class="panel-head"><h2>Rough books</h2><span class="muted small">Last '+H.length+' months, newest on the left</span></div><div class="tablewrap"><table class="grid"><thead><tr><th class="tl"></th>'+H.slice().reverse().map(p=>'<th>'+dateShort(p.m)+'</th>').join('')+'</tr></thead><tbody>'+rl.map(l=>'<tr><td class="tl"><b>'+l[0]+'</b></td>'+H.slice().reverse().map(p=>'<td class="num">'+(l[0]==='Cash at month end'?money(l[1](p)):rough(l[1](p)))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div><p>'+hireHint('books',1).replace('see this','get exact figures and a full breakdown of where the money goes')+'</p>'+CASHNOTE+'</section>';
   }
-  const lines=[['Revenue at sticker price','rev',1],['Dealer margins','dealer',-1],['Cost of cars sold','cogs',-1],['Storage','storage',-1],['Scrapped stock (loss)','scrap',-1],['Idle factories','idle',-1],['Dealer signing and offices','branch',-1],['Design projects','design',-1],['Staff wages','staff',-1],['Racing entry fees','racing',-1],['Interest','interest',-1],['Government work (profit)','gov',1],['Subsidiaries (profit or loss)','subs',1],['Antitrust fines','fines',-1],['Pre-tax profit','pretax',0],['Tax','tax',-1],['Net profit','net',0],['Factories: land, building, starting parts (cash)','capex',-1],['Dividends paid (cash)','div',-1],['Cash change','cchg',0],['Cash at month end','cash',0]];H.forEach(p=>{p.cchg=p.cashStart!=null?p.cash-p.cashStart:0;});
+  const lines=[['Revenue at sticker price','rev',1],['Dealer margins','dealer',-1],['Cost of cars sold','cogs',-1],['Storage','storage',-1],['Scrapped stock (loss)','scrap',-1],['Idle factories','idle',-1],['Dealer signing and offices','branch',-1],['Design projects','design',-1],['Staff wages','staff',-1],['Racing entry fees','racing',-1],['Interest','interest',-1],['Government work (profit)','gov',1],['Subsidiaries (profit or loss)','subs',1],['Antitrust fines','fines',-1],['Labor: guards and pensions','labor',-1],['Pre-tax profit','pretax',0],['Tax','tax',-1],['Net profit','net',0],['Factories: land, building, starting parts (cash)','capex',-1],['Dividends paid (cash)','div',-1],['Cash change','cchg',0],['Cash at month end','cash',0]];H.forEach(p=>{p.cchg=p.cashStart!=null?p.cash-p.cashStart:0;});
   h+='<section class="panel"><div class="panel-head"><h2>Income statement</h2><span class="muted small">Last '+H.length+' months, newest on the left</span></div><div class="tablewrap"><table class="grid"><thead><tr><th class="tl"></th>'+H.slice().reverse().map(p=>'<th>'+dateShort(p.m)+'</th>').join('')+'</tr></thead><tbody>'+lines.map(l=>'<tr><td class="tl">'+(l[2]===0?'<b>'+l[0]+'</b>':l[0])+'</td>'+H.slice().reverse().map(p=>{const v=(p[l[1]]||0)*(l[2]===-1?-1:1);return '<td class="num '+(l[2]===0&&v<0?'neg':'')+'">'+(l[2]===0?'<b>':'')+(Math.abs(v)<.5?'—':money(v))+(l[2]===0?'</b>':'')+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div><p class="hint">Cars are costed when they sell, so building ahead shows up as stock, not as a loss. Factory construction is an investment and does not reduce profit.</p>'+CASHNOTE+'</section>';
   return h;
 }
@@ -2635,6 +2793,7 @@ function renderStart(){
    '<div class="field"><label for="ng-name">Company name</label><div class="row" style="flex-wrap:nowrap"><input id="ng-name" class="txt" placeholder="Name your company" maxlength="40" style="flex:1"><button class="btn" data-act="ngco" title="Pick a company name for me">Pick for me</button></div></div>'+
    '<div class="field"><label for="ng-home">Starting region</label><select id="ng-home" class="sel"><option value="" selected>Choose where to start…</option>'+REGIONS.map(r=>'<option value="'+r.id+'">'+r.name+' ('+r.city+') · wages '+r.wage.toFixed(2)+'×, income '+r.inc.toFixed(2)+'×</option>').join('')+'</select></div>'+
    '<p class="hint">Your headquarters goes here. You can build factories and sign dealers anywhere. Rich, dense regions buy more cars; low-wage regions build them for less.</p>'+
+   '<div class="field"><label for="ng-diff">Difficulty</label><select id="ng-diff" class="sel">'+DIFF_IDS.map(k=>'<option value="'+k+'"'+(k==='normal'?' selected':'')+'>'+DIFF[k].name+'</option>').join('')+'</select><span class="hint">Relaxed: rivals mostly leave you alone. Standard: rivals fight back and prices fall as the market matures. Cutthroat: all of that, harder. You can change it later in the Game menu.</span></div>'+
    '<div class="field"><label for="ng-loan">Starting bank loan</label><select id="ng-loan" class="sel">'+[0,10000,20000,30000,40000].map(v=>'<option value="'+v+'" '+(v===20000?'selected':'')+'>'+(v?money(v)+' at '+(LOAN_RATE*100)+'% a year ('+money(v*LOAN_RATE/12)+'/mo interest)':'No loan')+'</option>').join('')+'</select></div>'+
    '<p class="hint">A first design costs about $3,500 and a small two-line factory about $7,500. You can borrow more later, up to the bank\'s limit of '+money(baseLoan(1900))+' this year. The limit grows as your company earns.</p>'+
    '<p class="small neg" id="ng-err" role="alert"></p><div class="row"><button class="btn primary" data-act="newgame">Found the company</button><button class="btn" data-act="importopen">Import a save</button></div></section></main>'+renderModal();
@@ -2645,14 +2804,25 @@ function renderModal(){
   if(md.type==='menu'){const sl=ui.slots;body='<h2>Game</h2><p class="muted">The game saves itself after every month. You can also save a copy at any point and come back to it later, and a copy is kept automatically at the start of each of the last '+AUTO_KEEP+' years.</p>'+
     '<h3>Saved games</h3><div class="row" style="flex-wrap:nowrap"><input id="slot-nm" class="txt" style="flex:1" maxlength="40" placeholder="'+esc(state.company.name+', '+dateLabel(state.m))+'"><button class="btn primary" data-act="slotsave">Save game</button></div>'+
     (sl==null?'<p class="small muted">Loading…</p>':!sl.length?'<p class="small muted">No saved games yet.</p>':'<div class="slotlist">'+sl.map(r=>'<div class="slot"><div><b>'+esc(r.name)+'</b>'+(r.auto?' <span class="chip">Auto</span>':'')+'<div class="small muted">'+esc(r.company)+' · '+dateLabel(r.m)+' · cash '+money(r.cash)+'</div></div><div class="row" style="flex-wrap:nowrap;margin:0"><button class="btn small" data-act="slotload" data-id="'+r.id+'">Load</button>'+(r.auto?'':'<button class="btn small" data-act="slotdel" data-id="'+r.id+'" aria-label="Delete '+esc(r.name)+'">Delete</button>')+'</div></div>').join('')+'</div>')+
-    '<h3>Settings</h3><p class="small muted">Game version '+GAME_BUILD+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:10px"><span>Starting build quality for new designs</span><select class="sel" data-chg="qdef" aria-label="Starting build quality for new designs">'+Array.from({length:21},(_,i)=>i*5).map(v=>'<option value="'+v+'"'+(v===qDefault()?' selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="row" style="gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-chg="hapset" '+(hapOn()?'checked':'')+'> <span>Vibration on iPhone (a buzz when a design finishes, a new part or market opens, you win a race or earn an achievement, or bad news arrives)</span></label><label class="row" style="gap:8px;align-items:center;cursor:pointer;margin-top:8px"><input type="checkbox" data-chg="ntset" '+(ntOn()?'checked':'')+'> <span>Show a card when new parts or markets arrive</span></label><h3>Other devices</h3><p class="small muted">To move a game to another device, export it here and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
+    '<h3>Settings</h3><p class="small muted">Game version '+GAME_BUILD+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:4px"><span>Difficulty for this game</span><select class="sel" data-chg="diffset">'+DIFF_IDS.map(k=>'<option value="'+k+'"'+(((state.diff||'normal')===k)?' selected':'')+'>'+DIFF[k].name+'</option>').join('')+'</select></label><p class="small muted" style="margin-top:0">'+dif().d+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:10px"><span>Starting build quality for new designs</span><select class="sel" data-chg="qdef" aria-label="Starting build quality for new designs">'+Array.from({length:21},(_,i)=>i*5).map(v=>'<option value="'+v+'"'+(v===qDefault()?' selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="row" style="gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-chg="hapset" '+(hapOn()?'checked':'')+'> <span>Vibration on iPhone (a buzz when a design finishes, a new part or market opens, you win a race or earn an achievement, or bad news arrives)</span></label><label class="row" style="gap:8px;align-items:center;cursor:pointer;margin-top:8px"><input type="checkbox" data-chg="ntset" '+(ntOn()?'checked':'')+'> <span>Show a card when new parts or markets arrive</span></label><h3>Other devices</h3><p class="small muted">To move a game to another device, export it here and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
   else if(md.type==='luxsell'){const b=state.me.buys[md.i];const v=b?luxValue(b):0;body='<h2>Sell '+esc(b?b.nm:'')+'?</h2><dl class="kv"><dt>Paid</dt><dd>'+money(b?b.paid:0)+' in '+(b?dateShort(b.m):'')+'</dd><dt>Worth now</dt><dd>'+money(v)+'</dd><dt>You get</dt><dd><b>'+money(v*.95)+'</b> <span class="muted small">after 5% in fees</span></dd><dt>Upkeep saved</dt><dd>'+money(b?luxUpkeep(b):0)+' a month</dd></dl><p class="hint">Prices for homes, art and teams follow the economy, so selling in a slump gets less.</p><div class="row"><button class="btn primary" data-act="luxselldo">Sell it</button><button class="btn" data-act="closemodal">Keep it</button></div>';}
   else if(md.type==='newtech'){body=ntModal(md);}
+  else if(md.type==='union'){const big=biggestFactory();body='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>The union is at the gate</h2><p>The United Auto Workers is organizing every big car plant. Its members at '+esc(big?big.name:'your factories')+' demand that you recognize the union and bargain with it.</p>'+
+    '<div class="tochoice"><div><b>Recognize the union</b><p class="small">Wages rise about 15%. Strikes become rare and turnover falls. A new contract every few years.</p><button class="btn primary" data-act="unionyes">Sign</button></div>'+
+    '<div><b>Fight it</b><p class="small">Hire guards ('+money(1500*costIdx(yearOf(state.m)))+' a month per factory) and lose reputation everywhere. Expect sit-down strikes that stop a plant for months. Washington may force you to give in.</p><button class="btn" data-act="unionno">Fight</button></div></div>';}
+  else if(md.type==='contract'){const D=dif();const post=yearOf(state.m)>=1946&&yearOf(state.m)<1948;const k=post?1.5:1;
+    body='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>Contract talks</h2><p>The union contract is up. Wages are '+Math.round(((state.unionW||1.15)-1)*100)+'% above the non-union rate.'+(post?' After the wartime wage freeze, workers are angry and ready to walk out.':'')+(yearOf(state.m)>=1950?' Pensions are on the table too.':'')+'</p>'+
+    '<div class="tochoice tri"><div><b>Generous</b><p class="small">Wages +9%. No strike.</p><button class="btn" data-act="contract" data-k="gen">Offer it</button></div>'+
+    '<div><b>Fair</b><p class="small">Wages +5%. About a '+Math.round(Math.min(.9,.25*D.cost*k)*100)+'% chance one plant walks out for a month.</p><button class="btn primary" data-act="contract" data-k="fair">Offer it</button></div>'+
+    '<div><b>Tough</b><p class="small">Wages +1%. About a '+Math.round(Math.min(.95,.6*D.cost*k)*100)+'% chance of a strike at every plant for two months.</p><button class="btn" data-act="contract" data-k="tough">Offer it</button></div></div>';}
+  else if(md.type==='fiveday'){const Y=yearOf(state.m);body='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>The Five-Dollar Day</h2><p>A big Detroit maker has just doubled its factory pay to five dollars a day. Workers are lining up at its gates, and yours are asking why they should stay.</p>'+
+    '<div class="tochoice"><div><b>Match it</b><p class="small">Labor costs about 60% more. Crews stay and work harder: output +5%, fewer strikes, and reputation rises in every region.</p><button class="btn primary" data-act="fiveyes">Raise pay</button></div>'+
+    '<div><b>Hold the line</b><p class="small">No extra pay. Many skilled hands leave: output −8% until 1920, and strikes are much more likely.</p><button class="btn" data-act="fiveno">Keep wages</button></div></div>';}
   else if(md.type==='era'){const c=CHECKPOINTS.find(x=>x.y===md.y);body='<div class="eyebrow">December '+md.y+'</div><h2>'+esc(c?c.name:'')+'</h2><p>A new era begins. Here is where '+esc(state.company.name)+' stands.</p>'+eraReport(md.y);}
   else if(md.type==='slotload'){const r=(ui.slots||[]).find(x=>x.id===md.id);body='<h2>Load this saved game?</h2>'+(r?'<p><b>'+esc(r.name)+'</b><br><span class="muted">'+esc(r.company)+' · '+dateLabel(r.m)+'</span></p>':'')+'<p>Your current game will be replaced. If you want to keep it, save it first from the Game menu.</p><div class="row"><button class="btn primary" data-act="slotloaddo">Load it</button><button class="btn" data-act="menu">Back</button></div>';}
   else if(md.type==='ach'){const got=state.ach||{};const life=achLife();const n=ACH.filter(a=>got[a.id]!=null).length;const pts=ACH.filter(a=>got[a.id]!=null).reduce((t,a)=>t+a.pts,0);
     body='<h2>Achievements</h2><p class="small">'+n+' of '+ACH.length+' in this game · '+pts+' of 1,000 points. Gold medals were earned in this game; grey ones in an earlier game.</p>'+(GC()?'<div class="row"><button class="btn" data-act="gcshow">Achievements in Game Center</button><button class="btn" data-act="gclb">Leaderboards</button></div>':'')+
-    '<div class="achlist">'+ACH.map(a=>'<div class="ach'+(got[a.id]!=null?' got':life[a.id]?' life':'')+'"><span class="medal"></span><div><b>'+esc(a.name)+'</b> <span class="muted small">'+a.pts+' pts</span><div class="small">'+a.d+(got[a.id]!=null?' <span class="muted">· '+dateShort(got[a.id])+'</span>':'')+'</div></div></div>').join('')+'</div>';}
+    '<div class="achlist">'+ACH.map(a=>'<div class="ach'+(got[a.id]!=null?' got':life[a.id]?' life':'')+'">'+achMedal(a)+'<div><b>'+esc(a.name)+'</b> <span class="muted small">'+a.pts+' pts</span><div class="small">'+a.d+(got[a.id]!=null?' <span class="muted">· '+dateShort(got[a.id])+'</span>':'')+'</div></div></div>').join('')+'</div>';}
   else if(md.type==='export'){body='<h2>Export save</h2><p class="muted">Copy this text and keep it somewhere safe.</p><textarea id="exp-text" readonly>'+esc(JSON.stringify(state))+'</textarea><div class="row">'+(window.claude?'':'<button class="btn primary" data-act="saveexport">Save as a file</button>')+'<button class="btn'+(window.claude?' primary':'')+'" data-act="copyexport">Copy text</button><span class="muted small" id="copy-msg"></span></div>'+(window.claude?'<p class="hint">To move this game to the phone app, copy the text, send it to yourself (email or a note), then paste it into Import save in the app.</p>':'<p class="hint">On a phone, "Save as a file" lets you send it to yourself or save it to Files or Drive, then load it on the other device.</p>')+'';}
   else if(md.type==='import'){body='<h2>Import save</h2><p class="muted">Paste an exported save. This replaces the current game.</p><div class="row"><label class="btn primary" style="cursor:pointer">Load a save file<input type="file" accept=".json,application/json,text/plain" data-chg="impfile" style="display:none"></label></div><p class="muted small" style="margin-top:10px">Or paste the save text:</p><textarea id="imp-text"></textarea><p class="small neg" id="imp-err"></p><div class="row"><button class="btn" data-act="doimport">Import pasted text</button></div>';}
   else if(md.type==='newconfirm'){body='<h2>Start a new game?</h2><p>This deletes the current company. Export it first if you want to keep it.</p><div class="row"><button class="btn danger" data-act="donew">Delete and start over</button></div>';}
@@ -2721,7 +2891,7 @@ function renderModal(){
       (C.cash>=cost?'':'<p class="neg small">Your company has '+money(C.cash)+'. Borrow on the Finance tab or raise money by issuing shares.</p>')+
       '<div class="row"><button class="btn primary" data-act="todo" data-how="keep" '+(canKeep?'':'disabled')+'>Buy and keep the brand</button><button class="btn" data-act="todo" data-how="absorb" '+(canAbs?'':'disabled')+'>Buy and absorb</button></div>';}
   else if(md.type==='msg'){body='<h2>'+esc(md.title)+'</h2><p>'+esc(md.text)+'</p>';}
-  return '<div class="modal-back" data-act="closemodal-bg"><div class="modal" role="dialog" aria-modal="true">'+body+'<div class="row" style="justify-content:flex-end"><button class="btn" data-act="closemodal">Close</button></div></div></div>';
+  return '<div class="modal-back" data-act="closemodal-bg"><div class="modal" role="dialog" aria-modal="true">'+body+(['fiveday','union','contract'].includes(md.type)?'':'<div class="row" style="justify-content:flex-end"><button class="btn" data-act="closemodal">Close</button></div>')+'</div></div>';
 }
 function msg(title,text){ui.modal={type:'msg',title,text};render();}
 
@@ -2736,6 +2906,7 @@ function endMonth(force){
   else if(state.over){ui.modal={type:'bankrupt'};}
   else if(_cp){ui.modal={type:'era',y:_cp.y};}
   else if(state.emerLast&&state.emerLast.m===state.m-1){ui.toast={title:'Emergency loan taken: '+money(state.emerLast.amt)+' at '+(EMER_RATE*100)+'%',text:'Dealer satisfaction fell 6 points and reputation 2 points in every region where you sell. Repay it from the Finance tab; repayments clear the emergency loan first.'};}
+  if(!ui.modal) ui.modal=laborModal();
   {const it=ntOn()?ntItems(state.m):[];if(it.length){const md={type:'newtech',items:it,m:state.m};if(ui.modal) ui.ntPending=md;else ui.modal=md;}}
   render();
 }
@@ -2864,11 +3035,21 @@ const A={
   ngpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ng-first'),l=document.getElementById('ng-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
   newgame:()=>{const name=(document.getElementById('ng-name').value||'').trim();const home=document.getElementById('ng-home').value;const err=document.getElementById('ng-err');
     if(!name){if(err) err.textContent='Give your company a name, or tap Pick for me.';document.getElementById('ng-name').focus();return;}
-    if(!home){if(err) err.textContent='Choose the region where your company starts.';document.getElementById('ng-home').focus();return;}const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});save();render();},
+    if(!home){if(err) err.textContent='Choose the region where your company starts.';document.getElementById('ng-home').focus();return;}const loan=+document.getElementById('ng-loan').value||0;const cap=v=>v.charAt(0).toUpperCase()+v.slice(1);const fi=cap((document.getElementById('ng-first').value||'').trim()),la=cap((document.getElementById('ng-last').value||'').trim());newGame(name,home,loan,{first:fi||'Henry',last:la||'Whitcomb'});{const dv=(document.getElementById('ng-diff')||{}).value;if(DIFF[dv]) state.diff=dv;}save();render();},
   copyexport:()=>{const ta=document.getElementById('exp-text');const m=document.getElementById('copy-msg');const done=()=>{if(m) m.textContent='Copied.';};try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';});}catch(e){ta.select();if(m) m.textContent='Selected. Press Ctrl+C or Cmd+C to copy.';}},
   doimport:()=>{const t=document.getElementById('imp-text').value;try{const p=JSON.parse(t);if(!p||p.v!==1||!p.company) throw new Error('bad');state=migrate(p);ui.modal=null;ui.prev=null;ui.design=null;save();render();}catch(e){const er=document.getElementById('imp-err');if(er) er.textContent='That text is not a Marque save. Paste the whole export, from the first { to the last }.';}},
   fsel:el=>{ui.fsel=el.dataset.f;render();const p=document.getElementById('fsel-panel');if(p) window.scrollTo(0,p.getBoundingClientRect().top+window.scrollY-110);},
-  closemodal:()=>{ui.modal=ui.ntPending||null;ui.ntPending=null;render();},
+  unionyes:()=>{state.union='yes';state.unionW=1.15;state.unionPending=false;state.contractM=state.m+36;addNews(state.company.name+' recognizes the United Auto Workers. Wages rise about 15%, and labor peace follows.','good');ui.modal=null;save();render();},
+  unionno:()=>{const D=dif();state.union='fight';state.unionPending=false;REGIONS.forEach(r=>{state.regRep[r.id]=clamp(regRep(r.id)-3,0,100);});addNews(state.company.name+' refuses to recognize the union and hires plant guards.','warn');if(rnd()<.55*Math.min(1.5,D.cost)) startStrike(biggestFactory(),1+Math.floor(rnd()*3),true,true);ui.modal=null;save();render();},
+  contract:el=>{const D=dif();const Y=yearOf(state.m);const k=Y>=1946&&Y<1948?1.5:1;const ch=el.dataset.k;state.contractPending=false;state.contractM=state.m+(Y>=1950?60:36);
+    if(ch==='gen'){state.unionW=(state.unionW||1.15)*1.09;addNews('New union contract signed with no strike. Wages rise 9%.','info');}
+    else if(ch==='fair'){state.unionW=(state.unionW||1.15)*1.05;if(rnd()<Math.min(.9,.25*D.cost*k)){const f=biggestFactory();startStrike(f,1,false,true);}else addNews('New union contract signed. Wages rise 5%.','info');}
+    else{state.unionW=(state.unionW||1.15)*1.01;if(rnd()<Math.min(.95,.6*D.cost*k)){state.factories.forEach(f=>{if(!f.building){f.strike=2;f.sit=false;}});addNews('The union calls a strike at every '+state.company.name+' plant. Output is cut in half for about two months.','bad');}else addNews('The union backs down. New contract with a 1% raise.','good');}
+    if(Y>=1950&&!state.pensions){state.pensions=true;addNews('The contract includes pensions for retired workers, a cost that grows every year.','info');}
+    ui.modal=null;save();render();},
+  fiveyes:()=>{state.five='yes';state.fivePending=false;REGIONS.forEach(r=>{state.regRep[r.id]=clamp(regRep(r.id)+3,0,100);});addNews(state.company.name+' matches the Five-Dollar Day. Workers stay, and newspapers praise the move.','good');ui.modal=null;save();render();},
+  fiveno:()=>{state.five='no';state.fivePending=false;addNews(state.company.name+' refuses to raise pay. Skilled workers leave for better-paying plants.','warn');ui.modal=null;save();render();},
+  closemodal:()=>{if(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type)) return;ui.modal=ui.ntPending||laborModal()||null;ui.ntPending=null;render();},
   ntdesign:()=>{ui.modal=null;ui.ntPending=null;ui.tab='design';render();window.scrollTo(0,0);},
   owneropen:()=>{ui.modal={type:'owner'};render();},
   owpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ow-first'),l=document.getElementById('ow-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
@@ -2883,7 +3064,7 @@ const A={
       addNews(who+' gives '+money(price)+' to found '+nm+(it.gw&&r?' in '+r.city:'')+'. The papers are full of praise.','good');ui.toast={title:nm+' is founded',text:'A gift of '+money(price)+'.'+(it.gw&&r?' Your reputation around '+esc(r.name)+' rises for good.':' Your reputation rises everywhere.')};}
     ui.modal=null;save();render();},
 
-  'closemodal-bg':(el,e)=>{if(e.target===el){ui.modal=null;render();}}
+  'closemodal-bg':(el,e)=>{if(e.target===el&&!(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type))){ui.modal=null;render();}}
 };
 const CHG={
   subceo:el=>{const rv=rvById(el.dataset.id);rv.ceo=el.value;const t=CEO_TYPES[rv.ceo];ui.toast={title:rv.name+': '+t.name.toLowerCase(),text:t.d+(t.pay?' Salary about '+money(ceoPay(rv,yearOf(state.m))*t.pay)+' a month, paid from its profits.':'')};save();render();},
@@ -2903,6 +3084,7 @@ const CHG={
   islvar:el=>{const md=ui.modal;if(!md) return;const was=md.v;md.v=el.value;const L=ownerLast();const def={isle:L+' Island',baja:'Rancho '+L};if(!md.nm||md.nm===def[was]||md.nm===fillName('{L} Island')) md.nm=def[md.v];render();},
   qdef:el=>{try{localStorage.setItem('marque-quality',String(parseInt(el.value,10)||50));}catch(e){}},
   ntset:el=>{try{localStorage.setItem('marque-newtech',el.checked?'on':'off');}catch(e){}},
+  diffset:el=>{if(DIFF[el.value]){state.diff=el.value;save();render();}},
   hapset:el=>{try{localStorage.setItem('marque-haptics',el.checked?'on':'off');}catch(e){}if(el.checked) hap('light');},
   shipserve:el=>{const f=byId(state.factories,el.dataset.f);if(!f.ship.serve){f.ship.serve={};REGIONS.forEach(r=>{if(hasDealers(r.id)) f.ship.serve[r.id]=true;});}if(el.checked) f.ship.serve[el.dataset.r]=true;else delete f.ship.serve[el.dataset.r];save();render();},
   share:el=>{const f=byId(state.factories,el.dataset.f);f.ship.shares[el.dataset.r]=clamp(Math.round(+el.value||0),0,100);save();render();}
@@ -2930,7 +3112,7 @@ document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');i
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(el&&INP[el.dataset.inp]) INP[el.dataset.inp](el);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ui.modal){ui.modal=null;render();}if(e.key==='Enter'&&e.target.matches('input[data-chg]')) e.target.blur();});
 
-try{window.__marque={get state(){return state},sim:()=>simMonth(),newGame,ratingsAt,scoreFor,eraBaseline};}catch(e){}
+try{window.__marque={get state(){return state},ACH,achMedal,sim:()=>simMonth(),newGame,ratingsAt,scoreFor,eraBaseline};}catch(e){}
 /* ================= boot ================= */
 function askOwner(){if(state&&!state.owner&&!ui.modal&&!ui.askedOwner){ui.askedOwner=true;ui.modal={type:'owner',first:true};}}
 function start(data){
