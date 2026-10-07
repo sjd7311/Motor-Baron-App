@@ -1590,7 +1590,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1';
+const GAME_BUILD='1.0.2';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -1603,6 +1603,10 @@ const gcStatus={native:false,plugin:false,tries:0,signedIn:false,error:'',free:F
 function GC(){if(_gc!==undefined) return _gc;_gc=null;try{const C=window.Capacitor;gcStatus.native=!!(C&&C.isNativePlatform&&C.isNativePlatform());gcStatus.hasReg=!!(C&&C.registerPlugin);gcStatus.hasPlugins=!!(C&&C.Plugins);gcStatus.inPlugins=!!(C&&C.Plugins&&C.Plugins.MotorBaronGameCenter);if(C&&C.isNativePlatform&&C.isNativePlatform()){if(C.Plugins&&C.Plugins.MotorBaronGameCenter) _gc=C.Plugins.MotorBaronGameCenter;else if(C.registerPlugin) _gc=C.registerPlugin('MotorBaronGameCenter');}}catch(e){gcStatus.error=String(e&&e.message||e);}gcStatus.plugin=!!_gc;return _gc;}
 function gcStart(){const g=GC();if(!g) return;gcStatus.tries=++_gcTries;try{g.signIn().then(r=>{gcIn=!!(r&&r.signedIn);gcStatus.signedIn=gcIn;gcStatus.error=(r&&r.error)||'';if(gcIn){const ids=Object.keys(achLife()).map(i=>'motorbaron.'+i);if(ids.length) g.unlockMany({ids}).catch(()=>{});try{if(state) lbRepost();}catch(e){}}else if(_gcTries<5){setTimeout(gcStart,2000);}}).catch(e=>{gcStatus.error=String(e&&e.message||e);if(_gcTries<5){setTimeout(gcStart,2000);}});}catch(e){gcStatus.error=String(e&&e.message||e);}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!gcIn) gcStart();});
+/* ----- one-time rating prompt: asked once, after the player closes their first era report ----- */
+function askForRating(){try{if(localStorage.getItem('marque-rated')) return;const g=GC();if(!g||!g.requestReview) return;localStorage.setItem('marque-rated','1');setTimeout(()=>{try{g.requestReview().catch(()=>{});}catch(e){}},900);}catch(e){}}
+/* Asked once, after about three years of play (36 months ended) at a calm moment: nothing else on screen and the company in the black. */
+function ratingCheck(){try{if(localStorage.getItem('marque-rated')||state.over) return;const n=(+localStorage.getItem('marque-months')||0)+1;localStorage.setItem('marque-months',String(n));if(n<36||ui.modal||ui.toast) return;if(state.company.cash-debt()<=0) return;askForRating();}catch(e){}}
 /* ----- leaderboards: scores posted at era checkpoints, plus the best single year ----- */
 const CHECKPOINTS=[{y:1915,m:unlockM(1915)+11,name:'The early years'},{y:1929,m:unlockM(1929)+11,name:'The Roaring Twenties'},{y:1945,m:unlockM(1945)+11,name:'Depression and war'},{y:1970,m:FULL_END_M,name:'The postwar boom'}];
 const LB_KINDS=[{k:'value',name:'Company value'},{k:'worth',name:'Personal net worth'},{k:'sold',name:'Cars sold'}];
@@ -2949,6 +2953,7 @@ function endMonth(force){
   if(!ui.modal) ui.modal=laborModal();
   {const it=ntOn()?ntItems(state.m):[];if(it.length){const md={type:'newtech',items:it,m:state.m};if(ui.modal) ui.ntPending=md;else ui.modal=md;}}
   render();
+  ratingCheck();
 }
 const A={
   achopen:()=>{ui.modal={type:'ach'};render();},
@@ -3091,7 +3096,7 @@ const A={
   statgo:el=>{ui.modal=null;ui.tab=el.dataset.tab;render();window.scrollTo(0,0);},
   fiveyes:()=>{state.five='yes';state.fivePending=false;REGIONS.forEach(r=>{state.regRep[r.id]=clamp(regRep(r.id)+3,0,100);});addNews(state.company.name+' matches the Five-Dollar Day. Workers stay, and newspapers praise the move.','good');ui.modal=null;save();render();},
   fiveno:()=>{state.five='no';state.fivePending=false;addNews(state.company.name+' refuses to raise pay. Skilled workers leave for better-paying plants.','warn');ui.modal=null;save();render();},
-  closemodal:()=>{if(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type)) return;ui.modal=ui.ntPending||laborModal()||null;ui.ntPending=null;render();},
+  closemodal:()=>{if(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type)) return;const _was=ui.modal&&ui.modal.type;ui.modal=ui.ntPending||laborModal()||null;ui.ntPending=null;render();if(_was==='era'||_was==='end') askForRating();},
   ntdesign:()=>{ui.modal=null;ui.ntPending=null;ui.tab='design';render();window.scrollTo(0,0);},
   owneropen:()=>{ui.modal={type:'owner'};render();},
   owpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ow-first'),l=document.getElementById('ow-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},

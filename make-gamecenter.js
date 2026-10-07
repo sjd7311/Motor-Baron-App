@@ -37,6 +37,8 @@ let package = Package(
 fs.writeFileSync(path.join(src, 'GameCenterPlugin.swift'), `import Foundation
 import Capacitor
 import GameKit
+import StoreKit
+import UIKit
 
 @objc(GameCenterPlugin)
 public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControllerDelegate {
@@ -48,7 +50,8 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
         CAPPluginMethod(name: "unlockMany", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "submitScore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "rank", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "show", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "show", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestReview", returnType: CAPPluginReturnPromise)
     ]
     private var started = false
     private var finished = false
@@ -242,6 +245,22 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
             vc.gameCenterDelegate = self
             self.bridge?.viewController?.present(vc, animated: true, completion: nil)
             call.resolve(["shown": true])
+        }
+    }
+
+    // Asks Apple to show its standard "rate this app" sheet. Apple decides whether it actually appears
+    // (it limits how often any app can ask), so the game only calls this once.
+    @objc func requestReview(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            let scene = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first { $0.activationState == .foregroundActive }
+            if let s = scene {
+                SKStoreReviewController.requestReview(in: s)
+                call.resolve(["asked": true])
+            } else {
+                call.resolve(["asked": false])
+            }
         }
     }
 
