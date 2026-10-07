@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Creates Motor Baron's Game Center achievements in App Store Connect.
+"""Creates Motor Baron's Game Center achievements and leaderboards in App Store Connect.
 
 Reads the achievement list straight from the game file, draws a medal image for each,
 and creates or updates them through the App Store Connect API. Safe to run again:
@@ -24,6 +24,15 @@ def find_game():
     sys.exit('Could not find game.html')
 
 
+def read_leaderboards(path):
+    s = open(path, encoding='utf-8').read()
+    if 'const LBS=[' not in s:
+        return []
+    start = s.index('const LBS=[')
+    block = s[start:s.index('];', start)]
+    return [{'id': a, 'name': n, 'fmt': f} for a, n, f in re.findall(r"\{id:'(\w+)',name:'([^']+)',fmt:'(\w+)'\}", block)]
+
+
 def read_achievements(path):
     s = open(path, encoding='utf-8').read()
     start = s.index('const ACH=[')
@@ -46,6 +55,25 @@ def font(size):
         if os.path.exists(f):
             return ImageFont.truetype(f, size)
     return ImageFont.load_default(size=size)
+
+
+_ART = None
+def art_png(a):
+    """Drawn medal for this achievement from achievement-art.zip (made from the game's own drawings), or None."""
+    global _ART
+    if _ART is None:
+        import zipfile
+        _ART = {}
+        here = os.path.dirname(os.path.abspath(__file__))
+        for p in (os.path.join(here, '..', 'achievement-art.zip'), os.path.join(here, '..', 'resources', 'achievement-art.zip'), os.path.join(here, 'achievement-art.zip'), 'achievement-art.zip'):
+            if os.path.exists(p):
+                with zipfile.ZipFile(p) as z:
+                    for n in z.namelist():
+                        if n.endswith('.png'):
+                            _ART[os.path.basename(n)[:-4]] = z.read(n)
+                print(f'Using {len(_ART)} drawn medal images from {p}')
+                break
+    return _ART.get(a['id'])
 
 
 def medal_png(a):
@@ -143,13 +171,23 @@ def main():
         gcd = call('POST', '/gameCenterDetails', {'data': {'type': 'gameCenterDetails', 'relationships': {'app': rel('apps', app_id)}}})
     gcd_id = gcd['data']['id']
 
-    existing = {}
-    url = f'/gameCenterDetails/{gcd_id}/gameCenterAchievements?limit=200'
-    while url:
-        r = call('GET', url)
-        for x in r['data']:
-            existing[x['attributes']['vendorIdentifier']] = x
-        url = r.get('links', {}).get('next')
+    # If the app is in a Game Center group (shared with the free edition), everything lives in the group.
+    grp = call('GET', f'/gameCenterDetails/{gcd_id}/gameCenterGroup', ok404=True)
+    grp_id = grp['data']['id'] if grp and grp.get('data') else None
+    owner = ('gameCenterGroups', grp_id, 'gameCenterGroup') if grp_id else ('gameCenterDetails', gcd_id, 'gameCenterDetail')
+    print('Using the shared Game Center group' if grp_id else 'Using this app\'s own Game Center (no group)')
+
+    def listall(url):
+        out = {}
+        while url:
+            r = call('GET', url)
+            for x in r['data']:
+                vid = x['attributes']['vendorIdentifier']
+                out[vid[4:] if vid.startswith('grp.') else vid] = x
+            url = r.get('links', {}).get('next')
+        return out
+
+    existing = listall(f'/{owner[0]}/{owner[1]}/gameCenterAchievements?limit=200')
 
     failed = []
     for a in achs:
@@ -165,8 +203,8 @@ def main():
                 status = 'updated'
             else:
                 x = call('POST', '/gameCenterAchievements', {'data': {'type': 'gameCenterAchievements',
-                         'attributes': {'referenceName': a['name'], 'vendorIdentifier': vid, 'points': a['pts'], 'showBeforeEarned': True, 'repeatable': False},
-                         'relationships': {'gameCenterDetail': rel('gameCenterDetails', gcd_id)}}})
+                         'attributes': {'referenceName': a['name'], 'vendorIdentifier': ('grp.' if grp_id else '') + vid, 'points': a['pts'], 'showBeforeEarned': True, 'repeatable': False},
+                         'relationships': {owner[2]: rel(owner[0], owner[1])}}})
                 ach_id = x['data']['id']
                 status = 'created'
             locs = call('GET', f'/gameCenterAchievements/{ach_id}/localizations')['data']
@@ -179,10 +217,18 @@ def main():
                 loc = call('POST', '/gameCenterAchievementLocalizations', {'data': {'type': 'gameCenterAchievementLocalizations',
                            'attributes': dict(la, locale='en-US'), 'relationships': {'gameCenterAchievement': rel('gameCenterAchievements', ach_id)}}})['data']
             img = call('GET', f'/gameCenterAchievementLocalizations/{loc["id"]}/gameCenterAchievementImage', ok404=True)
-            if not img or not img.get('data'):
-                png = medal_png(a)
+            art = art_png(a)
+            fname = vid + ('-art2.png' if art else '.png')
+            have = img and img.get('data')
+            if have and art and (img['data'].get('attributes') or {}).get('fileName') != fname:
+                # Replace the old lettered medal with the drawn one.
+                call('DELETE', f'/gameCenterAchievementImages/{img["data"]["id"]}')
+                have = None
+                status += ', old image removed'
+            if not have:
+                png = art or medal_png(a)
                 res = call('POST', '/gameCenterAchievementImages', {'data': {'type': 'gameCenterAchievementImages',
-                           'attributes': {'fileName': vid + '.png', 'fileSize': len(png)},
+                           'attributes': {'fileName': fname, 'fileSize': len(png)},
                            'relationships': {'gameCenterAchievementLocalization': rel('gameCenterAchievementLocalizations', loc['id'])}}})['data']
                 for op in res['attributes'].get('uploadOperations') or []:
                     chunk = png[op['offset']:op['offset'] + op['length']]
@@ -194,9 +240,45 @@ def main():
         except Exception as e:
             print(f'  {vid}: FAILED - {e}')
             failed.append(vid)
+
+    # ---------- leaderboards ----------
+    boards = read_leaderboards(find_game())
+    have = listall(f'/{owner[0]}/{owner[1]}/gameCenterLeaderboards?limit=200')
+    print(f'{len(boards)} leaderboards')
+    for b in boards:
+        vid = 'motorbaron.lb.' + b['id']
+        try:
+            if vid in have:
+                lb_id = have[vid]['id']
+                status = 'already there'
+            else:
+                x = call('POST', '/gameCenterLeaderboards', {'data': {'type': 'gameCenterLeaderboards',
+                         'attributes': {'referenceName': b['name'], 'vendorIdentifier': ('grp.' if grp_id else '') + vid,
+                                        'defaultFormatter': b['fmt'], 'submissionType': 'BEST_SCORE', 'scoreSortType': 'DESC'},
+                         'relationships': {owner[2]: rel(owner[0], owner[1])}}})
+                lb_id = x['data']['id']
+                status = 'created'
+            locs = call('GET', f'/gameCenterLeaderboards/{lb_id}/localizations')['data']
+            if not any(l['attributes']['locale'] == 'en-US' for l in locs):
+                la = {'locale': 'en-US', 'name': b['name']}
+                if b['fmt'] == 'INTEGER' and 'sold' in b['id'] or b['id'] == 'best_year':
+                    la.update({'formatterSuffix': ' cars', 'formatterSuffixSingular': ' car'})
+                try:
+                    call('POST', '/gameCenterLeaderboardLocalizations', {'data': {'type': 'gameCenterLeaderboardLocalizations', 'attributes': la,
+                         'relationships': {'gameCenterLeaderboard': rel('gameCenterLeaderboards', lb_id)}}})
+                except RuntimeError:
+                    la.pop('formatterSuffix', None); la.pop('formatterSuffixSingular', None)
+                    call('POST', '/gameCenterLeaderboardLocalizations', {'data': {'type': 'gameCenterLeaderboardLocalizations', 'attributes': la,
+                         'relationships': {'gameCenterLeaderboard': rel('gameCenterLeaderboards', lb_id)}}})
+                status += ', name added'
+            print(f'  {vid}: {status}')
+        except Exception as e:
+            print(f'  {vid}: FAILED - {e}')
+            failed.append(vid)
+
     if failed:
-        sys.exit(f'{len(failed)} achievements failed. Run the workflow again; finished ones are skipped.')
-    print('All achievements are set up in App Store Connect.')
+        sys.exit(f'{len(failed)} items failed. Run the workflow again; finished ones are skipped.')
+    print('All achievements and leaderboards are set up in App Store Connect.')
 
 
 if __name__ == '__main__':

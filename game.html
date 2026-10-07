@@ -139,6 +139,7 @@ input.txt{width:100%}
 .fpick{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}.fpick-row{all:unset;box-sizing:border-box;display:block;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}.fpick-row.sel{outline:2px solid var(--accent);border-color:var(--accent)}.fp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.fp-top b{font-size:16px}.fp-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.fp-st span{display:flex;flex-direction:column;font-family:var(--mono);font-size:15px;font-weight:600}.fp-st i{font-style:normal;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted)}
 table.grid.wtbl th,table.grid.wtbl td{padding-left:3px;padding-right:3px;letter-spacing:0}
 .amedal{width:44px;height:44px;flex:none}.amedal.big{width:56px;height:56px}.ach .amedal{filter:grayscale(1)}.ach.got .amedal{filter:none}.ach.life .amedal{filter:grayscale(.6)}
+button.statbtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent}button.statbtn:active{background:var(--line)}button.statbtn b{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:4px}
 .regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2;white-space:nowrap}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
@@ -859,6 +860,40 @@ function turnover(f){const Y=yearOf(state.m);
   return Math.round(t);}
 function learnRate(f){const D=dif();return D.cost?Math.max(.2,1-turnover(f)/100*.32*D.cost):1;}
 function strikeOdds(Y){return Y>=1910&&Y<1923?1:Y>=1933&&Y<1942?1.6:Y>=1942&&Y<1945.6?.12:Y>=1945.6&&Y<1951?1.4:.35;}
+
+/* ----- Detail screens for the Cash, Profit and Reputation numbers at the top ----- */
+function statModal(k){
+  const C=state.company,Y=yearOf(state.m),H=state.fin.hist,L=H[H.length-1],P2=H[H.length-2];
+  const row=(l,v,cls)=>'<dt>'+l+'</dt><dd class="'+(cls||'')+'">'+v+'</dd>';
+  const go=(tab,lab)=>'<div class="row"><button class="btn primary" data-act="statgo" data-tab="'+tab+'">'+lab+'</button></div>';
+  if(k==='cash'){
+    const pc=projectCash();const ch=L&&L.cashStart!=null?L.cash-L.cashStart:null;
+    let h='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>Cash</h2><p>Money in the company\'s bank account. It pays for cars, wages, factories and everything else. Run out and the bank steps in with an expensive emergency loan.</p>';
+    h+='<dl class="kv">'+row('Cash now','<b>'+money(C.cash)+'</b>')+(ch!=null?row('Change last month',(ch>=0?'+':'')+money(ch),ch<0?'neg':'pos'):'')+row('Expected at the end of this month',money(pc.end),pc.end<0?'neg':'')+row('Bank loan',money(debt()))+row('Credit you could still borrow',money(Math.max(0,maxLoan(Y)-debt())))+(state.fin.landPending?row('Factory land still to pay',money(state.fin.landPending)):'')+'</dl>';
+    if(L) h+='<h3>Where last month\'s cash went</h3><dl class="kv">'+[['Car sales (after dealer margins)',L.rev-L.dealer],['Building, shipping and running costs',ch!=null?ch-((L.rev-L.dealer)-(L.capex||0)-(L.design||0)-(L.staff||0)-(L.tax||0)-(L.div||0)+(L.borrowed||0)):'-'],['Factories, lines and upgrades',-(L.capex||0)],['Design projects',-(L.design||0)],['Staff and research wages',-(L.staff||0)],['Tax paid',-(L.tax||0)],['Dividends paid',-(L.div||0)],['Borrowed (or repaid)',L.borrowed||0]].filter(x=>x[1]!=='-'&&Math.abs(x[1])>=1).map(x=>row(x[0],(x[1]>=0?'+':'−')+money(Math.abs(x[1])),x[1]<0?'neg':'pos')).join('')+(ch!=null?row('<b>Change in cash</b>','<b>'+(ch>=0?'+':'−')+money(Math.abs(ch))+'</b>',ch<0?'neg':'pos'):'')+'</dl><p class="small muted">Cash and profit differ: cars cost cash when they are built, but only count against profit when they sell.</p>';
+    if(H.length>2) h+='<h3>Cash, last '+Math.min(60,H.length)+' months</h3>'+bigSpark(H.slice(-60).map(x=>x.cash),300,60);
+    return h+go('finance','Open Finance');}
+  if(k==='profit'){
+    let h='<div class="eyebrow">'+(L?'Results for '+dateLabel(L.m):dateLabel(state.m))+'</div><h2>Profit</h2>';
+    if(!L) return h+'<p>No months played yet.</p>';
+    const d=P2?L.net-P2.net:null;const y12=H.slice(-12).reduce((a,x)=>a+x.net,0);
+    h+='<dl class="kv">'+row('Net profit last month','<b>'+money(L.net)+'</b>',L.net<0?'neg':'')+(d!=null?row('Versus the month before',(d>=0?'▲ ':'▼ ')+money(Math.abs(d)),d<0?'neg':'pos'):'')+row('Last 12 months',money(y12),y12<0?'neg':'')+row('Profit margin',L.rev?Math.round(L.net/L.rev*100)+'% of sales':'—')+'</dl>';
+    const items=[['Car sales at sticker price','rev',1],['Dealer margins','dealer',-1],['Cost of the cars sold','cogs',-1],['Storage','storage',-1],['Scrapped stock','scrap',-1],['Idle factories','idle',-1],['Dealers and offices','branch',-1],['Design projects','design',-1],['Staff and research','staff',-1],['Racing fees','racing',-1],['Interest','interest',-1],['Labor: guards and pensions','labor',-1],['Antitrust fines','fines',-1],['Government work','gov',1],['Subsidiaries','subs',1],['Tax','tax',-1]];
+    h+='<h3>How last month added up</h3><dl class="kv">'+items.filter(x=>Math.abs(L[x[1]]||0)>=1).map(x=>row(x[0],(x[2]<0?'−':x[1]==='rev'?'':'+')+money(Math.abs(L[x[1]]||0)),x[2]<0?'neg':'')).join('')+row('<b>Net profit</b>','<b>'+money(L.net)+'</b>',L.net<0?'neg':'')+'</dl>';
+    const ms=state.models.filter(x=>{const hh=x.hist[x.hist.length-1];return hh&&hh.m===L.m;}).map(x=>({x,p:x.hist[x.hist.length-1].profit||0,n:x.hist[x.hist.length-1].sold||0})).sort((a,b)=>b.p-a.p);
+    if(ms.length) h+='<h3>By model</h3><dl class="kv">'+ms.map(o=>row(esc(o.x.name)+' <span class="muted small">'+int(o.n)+' sold</span>',money(o.p),o.p<0?'neg':'')).join('')+'</dl>';
+    if(H.length>2) h+='<h3>Profit, last '+Math.min(60,H.length)+' months</h3>'+bigSpark(H.slice(-60).map(x=>x.net),300,60);
+    return h+go('finance','Open the income statement');}
+  if(k==='rep'){
+    const rw=regWeights(Y);const rs=REGIONS.map(r=>({r,v:regRep(r.id),w:rw[r.id],d:hasDealers(r.id)})).sort((a,b)=>b.v-a.v);
+    const rh=state.repHist||[];const old=rh.length>12?rh[rh.length-13]:null;
+    let h='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>Reputation</h2><p>What buyers and dealers think of '+esc(C.name)+', from 0 to 100. A higher reputation sells more cars at the same price and makes dealers easier to sign. Your company number is the average of the regions, weighted by how many cars each one buys.</p>';
+    h+='<dl class="kv">'+row('Company reputation','<b>'+Math.round(C.rep)+'</b>')+(old!=null?row('A year ago',Math.round(old)):'')+'</dl>';
+    h+='<h3>By region</h3><div class="tablewrap"><table class="grid"><thead><tr><th class="tl">Region</th><th>Rep.</th><th>Buyers</th></tr></thead><tbody>'+rs.map(o=>'<tr><td class="tl">'+o.r.name+(o.d?'':' <span class="muted small">no dealers</span>')+'</td><td>'+repChip(o.v)+'</td><td class="num">'+Math.round(o.w*100)+'%</td></tr>').join('')+'</tbody></table></div>';
+    h+='<h3>What moves it</h3><ul class="small"><li>Selling well-rated cars in a region raises it there; poorly rated or unreliable cars lower it.</li><li>Race wins raise it around the race; breakdowns lower it.</li><li>Turning away buyers (missed sales over 10%) hurts it.</li><li>Branch offices, gifts to the public and sports teams help locally.</li><li>Early on, news travels slowly, so each region mostly judges what it sees itself.</li></ul>';
+    if(rh.length>2) h+='<h3>Reputation, last '+Math.min(60,rh.length)+' months</h3>'+bigSpark(rh.slice(-60),300,60);
+    return h+go('regions','Open Regions');}
+  return '';}
 function laborModal(){if(!state||state.over) return null;if(state.fivePending&&!state.five) return {type:'fiveday'};if(state.unionPending&&!state.union) return {type:'union'};if(state.contractPending) return {type:'contract'};return null;}
 function biggestFactory(){return state.factories.filter(f=>!f.building).sort((a,b)=>Object.values(b.prod||{}).reduce((t,p)=>t+p.lines,0)-Object.values(a.prod||{}).reduce((t,p)=>t+p.lines,0))[0];}
 function startStrike(f,months,sit,announce){if(!f) return;f.strike=months;f.sit=!!sit;if(announce) addNews(sit?'Sit-down strike! Workers occupy '+f.name+' and production there stops for about '+months+' month'+(months>1?'s':'')+'.':'Workers walk out at '+f.name+'. Output there is cut in half for '+(months>1?'about '+months+' months':'a month')+'.','bad');}
@@ -1555,7 +1590,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.1 (Oct 5, map routes)';
+const GAME_BUILD='1.0.1';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -2042,6 +2077,7 @@ function simMonth(){_newsBack=0;
     else if(dem>0){state.regRep[r.id]=cur+(Math.max(5,cur-10)+goodwill(r.id)-cur)*.06;}
     else state.regRep[r.id]=cur+(goodwill(r.id)-cur)*.01;});
   {const rwN=regWeights(Y);C.rep=REGIONS.reduce((a,r)=>a+rwN[r.id]*regRep(r.id),0);}
+  (state.repHist||(state.repHist=[])).push(Math.round(C.rep*10)/10);if(state.repHist.length>120) state.repHist.shift();
   // solvency
   if(C.cash<0){const room=Math.max(0,maxLoan(Y)-debt());const need=-C.cash;const take=Math.min(room,need);
     if(take>0){(state.flags||(state.flags={})).borrowed=true;C.emLoan=(C.emLoan||0)+take;C.cash+=take;P.borrowed=take;
@@ -2139,10 +2175,10 @@ function render(){
     '<div class="brand">'+esc(C.name)+'</div>'+
     '<div class="date">'+dateLabel(state.m)+'</div><div class="brk"></div>'+
     '<div class="topstats">'+
-      '<div class="stat"><label>Cash</label><b class="'+(C.cash<0?'neg':'')+'">'+money(C.cash)+'</b></div>'+
+      '<button class="stat statbtn" data-act="statinfo" data-k="cash"><label>Cash</label><b class="'+(C.cash<0?'neg':'')+'">'+money(C.cash)+'</b></button>'+
       (debt()>0?'<div class="stat"><label>Loan</label><b class="'+(C.emLoan>0?'neg':'')+'">'+money(debt())+'</b></div>':'')+
-      '<div class="stat" title="Profit counts a car\'s cost when it sells, not when it is built, so cash and profit can move differently."><label>Profit last mo</label><b class="'+(last&&last.net<0?'neg':'')+'">'+(last?bm(last.net):'—')+'</b></div>'+
-      '<div class="stat"><label>Reputation</label><b>'+Math.round(C.rep)+'</b></div>'+
+      '<button class="stat statbtn" data-act="statinfo" data-k="profit"><label>Profit last mo</label><b class="'+(last&&last.net<0?'neg':'')+'">'+(last?bm(last.net):'—')+'</b></button>'+
+      '<button class="stat statbtn" data-act="statinfo" data-k="rep"><label>Reputation</label><b>'+Math.round(C.rep)+'</b></button>'+
     '</div><div class="spacer"></div><div class="actions">'+
       '<button class="btn" data-act="menu">Game</button>'+
       ((ui.tab==='design'&&ui.designOpen)?'':'<button class="btn primary" data-act="end" '+(state.over||state.m>=END_M?'disabled':'')+'>End '+MON3[state.m%12]+' '+Math.floor(Y)+' ›</button>')+
@@ -2809,6 +2845,7 @@ function renderModal(){
     (sl==null?'<p class="small muted">Loading…</p>':!sl.length?'<p class="small muted">No saved games yet.</p>':'<div class="slotlist">'+sl.map(r=>'<div class="slot"><div><b>'+esc(r.name)+'</b>'+(r.auto?' <span class="chip">Auto</span>':'')+'<div class="small muted">'+esc(r.company)+' · '+dateLabel(r.m)+' · cash '+money(r.cash)+'</div></div><div class="row" style="flex-wrap:nowrap;margin:0"><button class="btn small" data-act="slotload" data-id="'+r.id+'">Load</button>'+(r.auto?'':'<button class="btn small" data-act="slotdel" data-id="'+r.id+'" aria-label="Delete '+esc(r.name)+'">Delete</button>')+'</div></div>').join('')+'</div>')+
     '<h3>Settings</h3><p class="small muted">Game version '+GAME_BUILD+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:4px"><span>Difficulty for this game</span><select class="sel" data-chg="diffset">'+DIFF_IDS.map(k=>'<option value="'+k+'"'+(((state.diff||'normal')===k)?' selected':'')+'>'+DIFF[k].name+'</option>').join('')+'</select></label><p class="small muted" style="margin-top:0">'+dif().d+'</p><label class="row" style="gap:8px;align-items:center;margin-bottom:10px"><span>Starting build quality for new designs</span><select class="sel" data-chg="qdef" aria-label="Starting build quality for new designs">'+Array.from({length:21},(_,i)=>i*5).map(v=>'<option value="'+v+'"'+(v===qDefault()?' selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="row" style="gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-chg="hapset" '+(hapOn()?'checked':'')+'> <span>Vibration on iPhone (a buzz when a design finishes, a new part or market opens, you win a race or earn an achievement, or bad news arrives)</span></label><label class="row" style="gap:8px;align-items:center;cursor:pointer;margin-top:8px"><input type="checkbox" data-chg="ntset" '+(ntOn()?'checked':'')+'> <span>Show a card when new parts or markets arrive</span></label><h3>Other devices</h3><p class="small muted">To move a game to another device, export it here and import it there.</p><div class="row"><button class="btn" data-act="exportopen">Export save</button><button class="btn" data-act="importopen">Import save</button><button class="btn danger" data-act="newconfirm">New game</button></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="achopen">Achievements · '+Object.keys(state.ach||{}).length+' of '+ACH.length+'</button></div>';}
   else if(md.type==='luxsell'){const b=state.me.buys[md.i];const v=b?luxValue(b):0;body='<h2>Sell '+esc(b?b.nm:'')+'?</h2><dl class="kv"><dt>Paid</dt><dd>'+money(b?b.paid:0)+' in '+(b?dateShort(b.m):'')+'</dd><dt>Worth now</dt><dd>'+money(v)+'</dd><dt>You get</dt><dd><b>'+money(v*.95)+'</b> <span class="muted small">after 5% in fees</span></dd><dt>Upkeep saved</dt><dd>'+money(b?luxUpkeep(b):0)+' a month</dd></dl><p class="hint">Prices for homes, art and teams follow the economy, so selling in a slump gets less.</p><div class="row"><button class="btn primary" data-act="luxselldo">Sell it</button><button class="btn" data-act="closemodal">Keep it</button></div>';}
+  else if(md.type==='stat'){body=statModal(md.k);}
   else if(md.type==='newtech'){body=ntModal(md);}
   else if(md.type==='union'){const big=biggestFactory();body='<div class="eyebrow">'+dateLabel(state.m)+'</div><h2>The union is at the gate</h2><p>The United Auto Workers is organizing every big car plant. Its members at '+esc(big?big.name:'your factories')+' demand that you recognize the union and bargain with it.</p>'+
     '<div class="tochoice"><div><b>Recognize the union</b><p class="small">Wages rise about 15%. Strikes become rare and turnover falls. A new contract every few years.</p><button class="btn primary" data-act="unionyes">Sign</button></div>'+
@@ -3050,6 +3087,8 @@ const A={
     else{state.unionW=(state.unionW||1.15)*1.01;if(rnd()<Math.min(.95,.6*D.cost*k)){state.factories.forEach(f=>{if(!f.building){f.strike=2;f.sit=false;}});addNews('The union calls a strike at every '+state.company.name+' plant. Output is cut in half for about two months.','bad');}else addNews('The union backs down. New contract with a 1% raise.','good');}
     if(Y>=1950&&!state.pensions){state.pensions=true;addNews('The contract includes pensions for retired workers, a cost that grows every year.','info');}
     ui.modal=null;save();render();},
+  statinfo:el=>{ui.modal={type:'stat',k:el.dataset.k};render();},
+  statgo:el=>{ui.modal=null;ui.tab=el.dataset.tab;render();window.scrollTo(0,0);},
   fiveyes:()=>{state.five='yes';state.fivePending=false;REGIONS.forEach(r=>{state.regRep[r.id]=clamp(regRep(r.id)+3,0,100);});addNews(state.company.name+' matches the Five-Dollar Day. Workers stay, and newspapers praise the move.','good');ui.modal=null;save();render();},
   fiveno:()=>{state.five='no';state.fivePending=false;addNews(state.company.name+' refuses to raise pay. Skilled workers leave for better-paying plants.','warn');ui.modal=null;save();render();},
   closemodal:()=>{if(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type)) return;ui.modal=ui.ntPending||laborModal()||null;ui.ntPending=null;render();},

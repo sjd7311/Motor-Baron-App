@@ -17,9 +17,9 @@ let pbx = fs.readFileSync(pbxP, 'utf8');
 pbx = pbx.replace(/TARGETED_DEVICE_FAMILY = "1,2";/g, 'TARGETED_DEVICE_FAMILY = 1;')
   .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`)
   .replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${build};`);
-// Game Center needs this entitlement in the signed app (full game only; the free edition has no Game Center).
+// Game Center needs this entitlement in the signed app. Both editions use it; each App ID needs the Game Center capability.
 const appId = require(path.join(root, 'capacitor.config.json')).appId;
-const gc = !/\.free$/.test(appId);
+const gc = true; // both editions share Game Center (achievements and leaderboards)
 if (gc) fs.writeFileSync(path.join(root, 'ios/App/App/App.entitlements'), `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
