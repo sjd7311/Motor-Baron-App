@@ -139,7 +139,7 @@ input.txt{width:100%}
 .fpick{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}.fpick-row{all:unset;box-sizing:border-box;display:block;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}.fpick-row.sel{outline:2px solid var(--accent);border-color:var(--accent)}.fp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.fp-top b{font-size:16px}.fp-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.fp-st span{display:flex;flex-direction:column;font-family:var(--mono);font-size:15px;font-weight:600}.fp-st i{font-style:normal;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted)}
 table.grid.wtbl th,table.grid.wtbl td{padding-left:3px;padding-right:3px;letter-spacing:0}
 .amedal{width:44px;height:44px;flex:none}.amedal.big{width:56px;height:56px}.ach .amedal{filter:grayscale(1)}.ach.got .amedal{filter:none}.ach.life .amedal{filter:grayscale(.6)}
-button.statbtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent}button.statbtn:active{background:var(--line)}button.statbtn b{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:4px}
+button.statbtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent}button.statbtn:active{background:var(--line)}
 .regcards{display:none}@media (max-width:700px){.regtable{display:none}.regcards{display:flex;flex-direction:column;gap:8px;margin-top:12px}}.regcard{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel,transparent);cursor:pointer}.regcard.sel{outline:2px solid var(--ink)}.regcard.none .rc-grid{opacity:.7}.rc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.rc-rep{white-space:nowrap}.rc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}.rc-grid3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.rc-st{display:flex;flex-direction:column;gap:3px;min-width:0}.rc-st span{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}.rc-st b{font-family:var(--mono);font-size:16px;font-weight:600;line-height:1.2;white-space:nowrap}.rc-st i{font-style:normal;font-size:11.5px;color:var(--muted)}.rc-exp{margin-top:4px}
 .shiptbl{width:100%;min-width:0}.shiptbl tfoot td,.shiptbl tr.shiphead td{white-space:normal}table.grid.shiptbl th{letter-spacing:0;padding-left:3px;padding-right:3px}table.grid.shiptbl td.num{padding-left:3px;padding-right:3px}.shiptbl td input.num.sm{width:46px}.shiptbl td{padding-left:5px;padding-right:5px}.shiptbl .shipmdl{white-space:normal;line-height:1.25}.shiptbl tr.shiphead td{background:var(--panel2,rgba(0,0,0,.035));border-top:1.5px solid var(--line);padding-top:8px;padding-bottom:8px}.shiptbl tr.shiphead.off td{opacity:.6}.shiphead-in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.shipreg{display:flex;gap:6px;align-items:center;cursor:pointer}.shippct{margin-left:auto;white-space:nowrap}.shippct input{width:56px}
 .selloff{margin-top:18px;padding-top:12px;border-top:1px dashed var(--line)}.selloff h3{margin:0 0 2px}
@@ -822,7 +822,7 @@ const dif=()=>DIFF[(state&&state.diff)||'normal']||DIFF.normal;
 function segMature(s,Y){return clamp((Y-SEG[s].from-2)/10,0,1);}
 function priceSens(s,Y){return 1+.6*dif().press*segMature(s,Y);}
 // A famous name helps, but past a point buyers stop paying extra for it.
-function repTerm(rep){const p=dif().press;const x=rep>70&&p?70+(rep-70)*(1-.5*Math.min(1,p)):rep;return .02*(x-50);}
+function repTerm(rep){const p=dif().press;const x=rep>70&&p?70+(rep-70)*(1-.5*Math.min(1,p)):Math.max(rep,30);return .02*(x-50);}
 // Rivals in a segment where you hold a big share cut prices, push reputation and bring out new models early.
 function rivalFight(m,Y,announce){
   const D=dif();state.fight=state.fight||{};if(!state.market) return;
@@ -858,6 +858,8 @@ function turnover(f){const Y=yearOf(state.m);
   if(state.five==='yes') t*=.35;if(state.union==='yes') t*=.6;
   const ass=Object.keys(f.prod||{});if(ass.length){const full=ass.filter(mid=>{const p=f.prod[mid];const c=prodCap(f,mid,p.lines,Y);return c>0&&p.target>=c*.95;}).length;if(full===ass.length) t*=1.25;}
   return Math.round(t);}
+// True when every model at this factory is set at 95%+ of its capacity (the case that adds 25% to turnover).
+function flatOut(f){const Y=yearOf(state.m);const ass=Object.keys(f.prod||{});return ass.length>0&&ass.every(mid=>{const p=f.prod[mid];const c=prodCap(f,mid,p.lines,Y);return c>0&&p.target>=c*.95;});}
 function learnRate(f){const D=dif();return D.cost?Math.max(.2,1-turnover(f)/100*.32*D.cost):1;}
 function strikeOdds(Y){return Y>=1910&&Y<1923?1:Y>=1933&&Y<1942?1.6:Y>=1942&&Y<1945.6?.12:Y>=1945.6&&Y<1951?1.4:.35;}
 
@@ -1590,7 +1592,7 @@ function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
 function HAP(){try{const C=window.Capacitor;if(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics&&hapOn()) return C.Plugins.Haptics;}catch(e){}return null;}
 // Built only from impact taps: on iPhone the notification-style buzzes were not felt, while impact taps are.
-const GAME_BUILD='1.0.2';
+const GAME_BUILD='1.0.3';
 const HAP_PAT={success:['HEAVY',140,'MEDIUM'],warning:['HEAVY',180,'HEAVY'],error:['HEAVY',150,'HEAVY',150,'HEAVY'],medium:['MEDIUM'],light:['LIGHT'],heavy:['HEAVY']};
 function hap(kind){const h=HAP();if(!h) return;const pat=HAP_PAT[kind]||HAP_PAT.light;let t=0;pat.forEach(x=>{if(typeof x==='number'){t+=x;return;}setTimeout(()=>{try{h.impact({style:x}).catch(()=>{});}catch(e){}},t);});}
 function hapMonth(prev,a0){const i=prev?state.news.indexOf(prev):-1;const news=i>=0?state.news.slice(0,i):state.news.filter(n=>n.m>=state.m-1);
@@ -1700,7 +1702,9 @@ function rdTier(k){const p=(state.rd&&state.rd.pts[k])||0;let t=0;for(let i=1;i<
 function rdTiers(){const o={};RD_IDS.forEach(k=>o[k]=rdTier(k));return o;}
 const withRd=spec=>Object.assign({},spec,{rd:rdTiers()});
 const designMonths=car=>Math.max(2,Math.round(car.months*(1-[0,.1,.2,.3][lv('eng')])));
-const lv=k=>(state&&state.staff&&state.staff[k])||0;
+const lvRaw=k=>(state&&state.staff&&state.staff[k])||0;
+// A department only works once its wage has been paid at the end of a month. Older saves have no record, so they count as paid.
+const lv=k=>{const r=lvRaw(k);return state&&state.staffPaid?Math.min(r,state.staffPaid[k]||0):r;};
 const staffPay=(k,l,Y)=>STAFF_DEF[k].levels[l].pay*costIdx(Y)*Math.pow(gF(Y),.35);
 const laborMult=()=>1-[0,0,.04,.08][lv('factory')];
 function rough(v){if(v==null||isNaN(v)) return '—';if(Math.abs(v)<5) return '$0';const a=Math.abs(v);let r;if(a<100) r=Math.round(a/10)*10;else if(a<1000) r=Math.round(a/100)*100;else{const mag=Math.pow(10,Math.floor(Math.log10(a))-1);r=Math.round(a/mag)*mag;}return '~'+(v<0?'−':'')+money(r).replace('−','');}
@@ -1753,7 +1757,7 @@ function projectCash(){
   const C=state.company,Y=yearOf(state.m);const H=state.fin.hist;const last=H[H.length-1];
   let op;
   if(last&&last.cashStart!=null) op=(last.cash-last.cashStart)+(last.capex||0)+(last.design||0)+(last.tax||0)-(last.borrowed||0);
-  else op=-(state.factories.filter(f=>!f.building).reduce((a,f)=>a+factoryFixed(f.lines,Y,meth(f)),0)+STAFF_IDS.reduce((a,k)=>a+staffPay(k,lv(k),Y),0)+rdPayroll(Y));
+  else op=-(state.factories.filter(f=>!f.building).reduce((a,f)=>a+factoryFixed(f.lines,Y,meth(f)),0)+STAFF_IDS.reduce((a,k)=>a+staffPay(k,lvRaw(k),Y),0)+rdPayroll(Y));
   const o=thisMonthOutlays();
   const end=C.cash+op-o.capex-o.design-o.tax;
   return {end,op,o};
@@ -1797,7 +1801,7 @@ function scrapCalc(mid,r){const S=state.stock[mid]||{};const regs=r==='all'?Obje
 function newGame(name,home,loan,owner){
   loan=clamp(loan||0,0,maxLoan(1900));
   state={v:1,m:0,rng:(Date.now()&0x7fffffff)|1,
-    company:{name,cash:START_CAPITAL+loan,loan,rep:1,home},staff:{books:0,factory:0,sales:0,market:0,eng:0},rd:{staff:{engine:0,light:0,rel:0,coach:0},pts:{engine:0,light:0,rel:0,coach:0}},regRep:{[home]:10},repV2:true,
+    company:{name,cash:START_CAPITAL+loan,loan,rep:1,home},staff:{books:0,factory:0,sales:0,market:0,eng:0},rd:{staff:{engine:0,light:0,rel:0,coach:0},pts:{engine:0,light:0,rel:0,coach:0}},regRep:{[home]:22},repV2:true,
     factories:[],dealers:{},
     projects:[],models:[],stock:{},rivals:initRivals(),races:{entries:{},results:[]},
     owner:owner||{first:'Henry',last:'Whitcomb'},fin:{hist:[],qtd:0,taxPaid:0},flags:{borrowed:loan>0},ach:{},me:{cash:0,hold:{},hist:[],buys:[]},eq:{pub:false,shares:IPO_SHARES,own:IPO_SHARES,price:0,phist:[],payout:0},mkt:{sent:.9,idx:100,hist:[]},news:[],lastDemand:{},market:null,nextId:1,over:false,capV2:true,insolvent:0,endShown:false};
@@ -1981,7 +1985,7 @@ function simMonth(){_newsBack=0;
         if(!cands.length) return;
         const e=CLASSES[c].e*priceSens(s,Y),ref=refPrice(c,s,Y);
         let tot=Math.exp(U0);
-        cands.forEach(cd=>{const sc=scoreFor(ratingCache[cd.x.id],s,c);cd.u=Math.exp(.075*sc-e*Math.log(cd.price/ref)+(cd.k==='o'?repTerm(cd.rep):.02*(cd.rep-50))+Math.log(cd.cov)+(cd.bonus||0)+powerBonus(engType(cd.x.spec.engine),c,r.id,Y));tot+=cd.u;});
+        cands.forEach(cd=>{const sc=scoreFor(ratingCache[cd.x.id],s,c);cd.u=Math.exp(.075*sc-e*Math.log(cd.price/ref)+(cd.k==='o'?repTerm(cd.rep):.02*(cd.rep-50))+Math.log(.25+.75*Math.min(1,cd.cov))+(cd.bonus||0)+powerBonus(engType(cd.x.spec.engine),c,r.id,Y));tot+=cd.u;});
         cands.forEach(cd=>{
           const d=N*cd.u/tot;
           if(cd.k==='o'){(nd[cd.x.id]||(nd[cd.x.id]={}))[r.id]=((nd[cd.x.id]||{})[r.id]||0)+d;}
@@ -2059,7 +2063,8 @@ function simMonth(){_newsBack=0;
     if(L.signed) addNews('Signed '+L.signed+' new dealer'+(L.signed>1?'s':'')+' in '+REG[r].city+' ('+d.n+' of '+slots+').','good');
     d.last=L;
   });
-  STAFF_IDS.forEach(k=>{const pay=staffPay(k,lv(k),Y);C.cash-=pay;P.staff+=pay;});
+  STAFF_IDS.forEach(k=>{const pay=staffPay(k,lvRaw(k),Y);C.cash-=pay;P.staff+=pay;});
+  if(!state.staffPaid) state.staffPaid={};STAFF_IDS.forEach(k=>{state.staffPaid[k]=lvRaw(k);});
   {const rp=rdPayroll(Y);C.cash-=rp;P.staff+=rp;}
   if(state.rd) RD_IDS.forEach(f=>{const L=rdLv(f);if(!L) return;const before=rdTier(f);state.rd.pts[f]=Math.min(RD_STEPS[RD_MAX],state.rd.pts[f]+RD_RATE[L]);const after=rdTier(f);if(after>before) addNews('Research breakthrough: '+RD[f].name+' reaches level '+after+' ('+RD[f].per+' per level). New designs get it from now on.','good');});
   rivalsFinance(P,m,Y);rivalsCorporate(m,Y);antitrustMonth(P,m,Y);
@@ -2206,7 +2211,7 @@ function viewOverview(){
     ['Put the car on a factory line and set its price','factories',state.factories.some(f=>Object.keys(f.prod).length>0)||state.models.some(x=>x.life&&x.life.sold>0)]
   ];
   if(!state.flags) state.flags={};if(steps.every(s=>s[2])) state.flags.started=true;
-  if(!state.flags.started&&steps.some(s=>!s[2])) h+='<section class="panel"><div class="panel-head"><h2>Getting started</h2><span class="muted small">Your rivals are already selling. Design and factory work run at the same time, so start both.</span></div><div class="alerts">'+steps.map(s=>'<div class="alert '+(s[2]?'good':'info')+'"><span class="chip '+(s[2]?'good':'info')+'">'+(s[2]?'Done':'To do')+'</span><span>'+s[0]+(s[2]?'':' <button class="btn small" data-act="tab" data-tab="'+s[1]+'">Go</button>')+'</span></div>').join('')+'</div></section>';
+  if(!state.flags.started&&steps.some(s=>!s[2])) h+='<section class="panel"><div class="panel-head"><h2>Getting started</h2><span class="muted small">Your rivals are already selling. Design and factory work run at the same time, so start both.</span></div><div class="alerts">'+steps.map(s=>'<div class="alert '+(s[2]?'good':'info')+'"><span class="chip '+(s[2]?'good':'info')+'">'+(s[2]?'Done':'To do')+'</span><span>'+s[0]+(s[2]?'':' <button class="btn small" data-act="tab" data-tab="'+s[1]+'">Go</button>')+'</span></div>').join('')+'</div><p class="muted small" style="margin:10px 0 0">Tip: tap Cash, Profit or Reputation at the top to see what each number means.</p></section>';
   h+='<section class="panel"><div class="panel-head"><h2>Monthly briefing</h2><span class="muted small">'+(last?'Results for '+dateLabel(state.m-1):'No results yet. Set up production, then end the month.')+'</span></div>';
   h+=al.length?'<div class="alerts">'+al.map(a=>'<div class="alert '+a.sev+'"><span class="chip '+a.sev+'">'+({bad:'Act',warn:'Watch',good:'News',info:'Note',rival:'Rival'}[a.sev])+'</span><span>'+a.text+(a.sel?' <button class="btn small" data-act="selmodel" data-id="'+a.sel+'">Open</button>':a.act==='govopen'?' <button class="btn small primary" data-act="govopen">Decide</button>':a.act?' <button class="btn small" data-act="tab" data-tab="'+a.act+'">Open</button>':'')+'</span></div>').join('')+'</div>':'<p class="muted">Nothing needs attention.</p>';
   h+='</section>';
@@ -2478,7 +2483,7 @@ function compareView(){
 function viewFactories(){
   const Y=yearOf(state.m);
   let h='<div class="panel-head"><h2>Factories</h2><button class="btn" data-act="buildfactory">Build a new factory</button></div>';
-  h+='<p class="muted small">Each factory decides what it builds and where its cars go. Basic line capacity this year: <b class="mono">'+int(capPerLine(Y))+'</b> cars per line per month, before production methods and crew experience.</p>'+(dif().cost&&(state.union||state.five)?'<p class="small"><b>Labor:</b> '+[state.five==='yes'?'Five-Dollar Day pay':state.five==='no'?'Held wages in 1914':'',state.union==='yes'?'Union shop, wages +'+Math.round(((state.unionW||1.15)-1)*100)+'%'+(state.contractM?', next contract '+dateLabel(state.contractM):''):state.union==='fight'?'Fighting the union':'',yearOf(state.m)>=1950?'Pensions '+money(pensionCost(yearOf(state.m)))+'/mo':''].filter(Boolean).join(' · ')+'</p>':'');
+  h+='<p class="muted small">Basic line capacity this year: <b class="mono">'+int(capPerLine(Y))+'</b> cars per line per month.</p>'+(dif().cost&&(state.union||state.five)?'<p class="small"><b>Labor:</b> '+[state.five==='yes'?'Five-Dollar Day pay':state.five==='no'?'Held wages in 1914':'',state.union==='yes'?'Union shop, wages +'+Math.round(((state.unionW||1.15)-1)*100)+'%'+(state.contractM?', next contract '+dateLabel(state.contractM):''):state.union==='fight'?'Fighting the union':'',yearOf(state.m)>=1950?'Pensions '+money(pensionCost(yearOf(state.m)))+'/mo':''].filter(Boolean).join(' · ')+'</p>':'');
   if(!state.factories.length) h+='<div class="empty">You have no factory yet. A small two-line works in 1900 costs about '+money(8000*.3+2*lineCost(state.company.home,Y))+' and takes 7 months to build.</div>';
   if(state.factories.length>1){
     if(!state.factories.some(f=>f.id===ui.fsel)) ui.fsel=state.factories[0].id;
@@ -2525,8 +2530,8 @@ function factoryPanel(f){
   {const M=meth(f);const nexts=avail(METHODS,state.m).filter(x=>x.cap>M.cap);
    h+='<div class="field"><label>Production method</label><div class="row"><b>'+M.name+'</b><span class="hint">'+M.desc+' Output ×'+M.cap.toFixed(2)+', labor ×'+M.lab.toFixed(2)+'.</span></div>'+
    (f.upgrade?'<p class="small"><span class="chip warn">Upgrading</span> Switching to <b>'+byId(METHODS,f.upgrade.to).name+'</b>, ready in '+f.upgrade.monthsLeft+' mo. '+money(f.upgrade.costLeft)+' still to pay. The factory keeps running meanwhile.</p>':
-    nexts.length?'<div class="row">'+nexts.map(x=>'<button class="btn" data-act="upgradeask" data-f="'+f.id+'" data-to="'+x.id+'">Upgrade to '+x.name.toLowerCase()+' · '+money(upgradeCost(f,x,Y))+'</button>').join('')+'</div>':'<p class="hint">This is the most advanced method available in '+Math.floor(Y)+'.</p>')+
-   '<p class="hint">Crews also get faster the longer they build the same model: up to 12% more output and 15% less labor over about three years. Moving a model to a new line starts a new crew.</p>'+(dif().cost?'<p class="small"><b>Crew turnover:</b> about '+turnover(f)+'% of workers quit each year'+(turnover(f)>=120?' (very high)':turnover(f)>=60?' (high)':'')+', so crews here learn at '+Math.round(learnRate(f)*100)+'% speed.'+(f.strike>0?' <span class="chip bad">'+(f.sit?'Sit-down strike':'On strike')+'</span>':'')+'</p>':'')+'</div>';}
+    nexts.length?'<div class="row">'+nexts.map(x=>'<button class="btn" data-act="upgradeask" data-f="'+f.id+'" data-to="'+x.id+'">Upgrade to '+x.name.toLowerCase()+' · '+money(upgradeCost(f,x,Y))+'</button>').join('')+'</div>':'')+
+   '<details class="small"><summary class="hint">How crews learn</summary><p class="hint">Crews get faster the longer they build the same model: up to 12% more output and 15% less labor over about three years. Moving a model to a new line starts a new crew.</p></details>'+(dif().cost&&turnover(f)>=60&&flatOut(f)?'<p class="small"><b>Crew turnover is high</b> ('+turnover(f)+'% a year), so crews learn at '+Math.round(learnRate(f)*100)+'% speed. Running every line flat out adds about 25% to turnover; set a target under 95% of capacity to ease it.</p>':'')+(f.strike>0?'<p class="small"><span class="chip bad">'+(f.sit?'Sit-down strike':'On strike')+'</span></p>':'')+'</div>';}
   h+=govFactoryBlock(f);
   h+='<dl class="kv"><dt>Fixed cost</dt><dd>'+money(factoryFixed(f.lines,Y,meth(f)))+' / month</dd><dt>Built last month</dt><dd>'+int(f.last?f.last.built:0)+' cars</dd>'+(lv('factory')>=1?'<dt>Overhead per car last month</dt><dd>'+(f.last&&f.last.built?money(f.last.ovhUnit):'—')+'</dd>':'')+'</dl>';
   // production table
@@ -2705,9 +2710,9 @@ function viewRacing(){
   return h;
 }
 function viewStaff(){
-  const Y=yearOf(state.m);let total=rdPayroll(Y);STAFF_IDS.forEach(k=>total+=staffPay(k,lv(k),Y));
-  let h='<section class="panel"><div class="panel-head"><h2>Staff</h2><span class="muted small">Payroll: <b class="mono">'+money(total)+'</b> a month</span></div><p class="muted small">Without staff you run the company on rough numbers. Hire people to see more detail, and some of them make parts of the business run better. Changes take effect right away; wages are paid at the end of each month.</p></section>';
-  h+='<div class="grid2">'+STAFF_IDS.map(k=>{const D=STAFF_DEF[k];const cur=lv(k);
+  const Y=yearOf(state.m);let total=rdPayroll(Y);STAFF_IDS.forEach(k=>total+=staffPay(k,lvRaw(k),Y));
+  let h='<section class="panel"><div class="panel-head"><h2>Staff</h2><span class="muted small">Payroll: <b class="mono">'+money(total)+'</b> a month</span></div><p class="muted small">Without staff you run the company on rough numbers. Hire people to see more detail, and some of them make parts of the business run better. New hires start work once their first wage is paid at the end of the month. Letting someone go stops them right away.</p></section>';
+  h+='<div class="grid2">'+STAFF_IDS.map(k=>{const D=STAFF_DEF[k];const cur=lvRaw(k);
     return '<section class="panel"><div class="panel-head"><h2>'+D.name+'</h2><span class="chip '+(cur?'good':'')+'">'+D.levels[cur].t+'</span></div><div style="display:flex;flex-direction:column;gap:8px">'+D.levels.map((L,i)=>'<label style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:8px 10px;border:1px solid '+(i===cur?'var(--accent)':'var(--line)')+';border-radius:6px;background:'+(i===cur?'var(--accent-soft)':'transparent')+';cursor:pointer"><input type="radio" name="st-'+k+'" data-chg="staff" data-k="'+k+'" value="'+i+'" '+(i===cur?'checked':'')+' style="margin-top:3px"><span><b>'+L.t+'</b><br><span class="small muted">'+L.d+'</span></span><span class="mono small">'+(L.pay?money(staffPay(k,i,Y))+'/mo':'Free')+'</span></label>').join('')+'</div></section>';}).join('')+'<section class="panel"><div class="panel-head"><h2>Research and development</h2><span class="mono small">'+money(rdPayroll(Y))+'/mo</span></div><p class="small">Each research area has its own researcher, so you can work on several at once.</p><dl class="kv">'+RD_IDS.map(k=>'<dt>'+RD[k].name+'</dt><dd>'+STAFF_DEF.rd.levels[rdLv(k)].t+'</dd>').join('')+'</dl><div class="row"><button class="btn" data-act="tab" data-tab="design">Manage research on the Design tab</button></div></section></div>';
   return h;
 }
@@ -3124,7 +3129,7 @@ const CHG={
   dtarget:el=>{const r=el.dataset.r;const d=dealerRec(r);d.target=clamp(Math.round(+el.value||0),0,dealerSlots(r,yearOf(state.m)));save();render();},
   dmargin:el=>{const d=dealerRec(el.dataset.r);d.margin=clamp((+el.value||20)/100,.05,.5);save();render();},
   rdstaff:el=>{const k=el.dataset.k;const v=clamp(+el.value||0,0,3);const old=rdLv(k);if(v===old) return;state.rd.staff[k]=v;const Y=yearOf(state.m);ui.toast={title:v?STAFF_DEF.rd.levels[v].t+' now working on '+RD[k].name.toLowerCase():RD[k].name+' research stopped',text:v?'Wages: '+money(staffPay('rd',v,Y))+' a month. Total R&D wages: '+money(rdPayroll(Y))+' a month.':'Progress so far is kept. Total R&D wages: '+money(rdPayroll(Y))+' a month.'};addNews(v?'Hired a '+STAFF_DEF.rd.levels[v].t.toLowerCase()+' for '+RD[k].name.toLowerCase()+'.':'Stopped '+RD[k].name.toLowerCase()+' research.','info');save();render();},
-  staff:el=>{const k=el.dataset.k;const v=clamp(+el.value||0,0,3);const old=lv(k);if(v===old) return;state.staff[k]=v;ui.toast={title:v?STAFF_DEF[k].levels[v].t+' hired for '+STAFF_DEF[k].name.toLowerCase():STAFF_DEF[k].name+' staff let go',text:v?'Wages: '+money(staffPay(k,v,yearOf(state.m)))+' a month, starting at the end of this month.':'No more wages for this department. Its numbers go back to rough.'};addNews(v>old?'Hired: '+STAFF_DEF[k].levels[v].t.toLowerCase()+' ('+STAFF_DEF[k].name.toLowerCase()+').':v===0?'Let go of '+STAFF_DEF[k].name.toLowerCase()+' staff.':'Scaled '+STAFF_DEF[k].name.toLowerCase()+' back to '+STAFF_DEF[k].levels[v].t.toLowerCase()+'.','info');save();render();},
+  staff:el=>{const k=el.dataset.k;const v=clamp(+el.value||0,0,3);const old=lvRaw(k);if(v===old) return;if(!state.staffPaid){state.staffPaid={};STAFF_IDS.forEach(x=>{state.staffPaid[x]=lvRaw(x);});}state.staff[k]=v;if(v<state.staffPaid[k]) state.staffPaid[k]=v;ui.toast={title:v?STAFF_DEF[k].levels[v].t+' hired for '+STAFF_DEF[k].name.toLowerCase():STAFF_DEF[k].name+' staff let go',text:v?'Wages: '+money(staffPay(k,v,yearOf(state.m)))+' a month. They start work after the first wage is paid at the end of this month.':'No more wages for this department. Its numbers go back to rough.'};addNews(v>old?'Hired: '+STAFF_DEF[k].levels[v].t.toLowerCase()+' ('+STAFF_DEF[k].name.toLowerCase()+').':v===0?'Let go of '+STAFF_DEF[k].name.toLowerCase()+' staff.':'Scaled '+STAFF_DEF[k].name.toLowerCase()+' back to '+STAFF_DEF[k].levels[v].t.toLowerCase()+'.','info');save();render();},
   racefilter:el=>{ui.raceFilter=el.value;render();},
   shipex:el=>{const f=byId(state.factories,el.dataset.f);f.ship.exact=f.ship.exact||{};const E=f.ship.exact[el.dataset.id]||(f.ship.exact[el.dataset.id]={});const Y=yearOf(state.m);const pr=f.prod[el.dataset.id];const n=pr?Math.min(pr.target,prodCap(f,el.dataset.id,pr.lines,Y)):0;const others=REGIONS.filter(r=>r.id!==el.dataset.r&&hasDealers(r.id)).reduce((t,r)=>t+(+E[r.id]||0),0);const want=Math.max(0,Math.round(+el.value||0));E[el.dataset.r]=Math.min(want,Math.max(0,n-others));save();render();if(want>E[el.dataset.r]) ui.toast={title:'Capped at '+E[el.dataset.r],text:'This factory builds '+n+' of this model a month and '+others+' are already placed elsewhere.'},render();},
   bfnfix:el=>{if(ui.modal&&(!el.value||isNaN(parseInt(el.value,10)))){el.value=ui.modal.lines||1;}else if(ui.modal&&String(ui.modal.lines)!==el.value){render();}},
