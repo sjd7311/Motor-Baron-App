@@ -26,7 +26,7 @@ definitions:
       script: |
         cp resources/icon-$EDITION.png resources/icon.png
         if [ -f resources/splash-$EDITION.png ]; then cp resources/splash-$EDITION.png resources/splash.png; cp resources/splash-$EDITION.png resources/splash-dark.png; fi
-        npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#1d5842' --splashBackgroundColor '#1d5842' --splashBackgroundColorDark '#1d5842'
+        npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#efe4c8' --splashBackgroundColor '#efe4c8' --splashBackgroundColorDark '#efe4c8'
     - name: iPhone only, portrait, version numbers
       script: node scripts/patch-ios.js $PROJECT_BUILD_NUMBER
     - name: Copy the game into the app
