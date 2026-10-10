@@ -1,6 +1,6 @@
 {
   "name": "motor-baron",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "prepare:full": "node scripts/prepare.js full",
