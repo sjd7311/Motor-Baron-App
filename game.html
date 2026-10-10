@@ -1936,19 +1936,32 @@ const NTA=(()=>{
  return A;
 })();
 function ntOn(){try{return localStorage.getItem('marque-newtech')!=='off';}catch(e){return true;}}
-function ntItems(m){const out=[];if(!(m>0)) return out;
+function __ntItemsOld(m){const out=[];if(!(m>0)) return out;
   SEG_IDS.forEach(s=>{if(unlockM(SEG[s].from)===m) out.push({cat:(s==='truck'||s==='delivery')?'truck':'market',key:'seg_'+s,kind:'New market',name:SEG[s].name,text:SEG[s].desc});});
   NT_CATS.forEach(([cat,label,list])=>list().forEach(c=>{if(unlockM(c.year)===m) out.push({cat,key:c.id,kind:label,name:c.name,text:NT_BLURB[c.name]||c.note||''});}));
   return out;}
+
+const F_='fill="currentColor" fill-opacity=".15"';
+Object.assign(NTA,{
+ meth_machine:'<path d="M10 112h180"/><path d="M20 112V86h160v26"/><rect x="26" y="52" width="40" height="34" rx="3" '+F_+'/><path d="M66 66h30M96 62v8"/><rect x="104" y="72" width="44" height="14" rx="2" '+F_+'/><path d="M30 20h140"/><circle cx="46" cy="20" r="8"/><circle cx="46" cy="40" r="5"/><path d="M46 28v7M40 20L36 40M52 20l4 20"/><path d="M152 78h14"/>',
+ meth_jigs:'<path d="M10 112h180"/><rect x="30" y="78" width="140" height="22" rx="2" '+F_+'/><path d="M30 100h140"/><rect x="60" y="52" width="80" height="26" rx="3" '+F_+'/><path d="M60 52V34h14v18M126 52V34h14v18"/><circle cx="67" cy="30" r="5"/><circle cx="133" cy="30" r="5"/><path d="M82 52v26M118 52v26"/><circle cx="100" cy="65" r="6"/>',
+ meth_line:'<path d="M10 112h180"/><path d="M12 92h176"/><circle cx="26" cy="102" r="7"/><circle cx="72" cy="102" r="7"/><circle cx="118" cy="102" r="7"/><circle cx="164" cy="102" r="7"/><path d="M19 96h152"/><path d="M40 90V76h42l8-12h30l8 12h22v14z" '+F_+'/><path d="M84 76l6-10h26l4 10"/><circle cx="52" cy="90" r="6"/><circle cx="140" cy="90" r="6"/><circle cx="30" cy="48" r="6"/><path d="M30 54v22M30 64l-10 6M30 64l12 4"/><circle cx="170" cy="48" r="6"/><path d="M170 54v22M170 64l-12 6M170 64l10 4"/>',
+ meth_conveyor:'<path d="M10 112h180"/><path d="M8 18h184"/><path d="M40 18v12M100 18v12M160 18v12"/><path d="M40 30v14M100 30v14M160 30v14"/><path d="M22 70V52h36l6-8h32l6 8h24" transform="translate(0,0)"/><rect x="26" y="44" width="52" height="26" rx="4" '+F_+'/><rect x="100" y="44" width="52" height="26" rx="4" '+F_+'/><circle cx="40" cy="76" r="6"/><circle cx="66" cy="76" r="6"/><circle cx="114" cy="76" r="6"/><circle cx="140" cy="76" r="6"/><rect x="30" y="88" width="30" height="24" rx="2" '+F_+'/><rect x="140" y="88" width="30" height="24" rx="2" '+F_+'/>',
+ meth_transfer:'<path d="M10 112h180"/><rect x="12" y="52" width="42" height="48" rx="3" '+F_+'/><rect x="79" y="52" width="42" height="48" rx="3" '+F_+'/><rect x="146" y="52" width="42" height="48" rx="3" '+F_+'/><path d="M54 76h25M121 76h25"/><path d="M70 70l9 6-9 6M137 70l9 6-9 6"/><path d="M24 52V40h18v12M91 52V40h18v12M158 52V40h18v12"/><circle cx="33" cy="76" r="9"/><circle cx="100" cy="76" r="9"/><circle cx="167" cy="76" r="9"/>',
+ meth_automation:'<path d="M10 112h180"/><rect x="20" y="92" width="64" height="20" rx="2" '+F_+'/><path d="M52 92V70"/><circle cx="52" cy="66" r="7"/><path d="M52 60L84 36"/><circle cx="86" cy="34" r="6"/><path d="M90 36l14 12M90 32l16 2"/><rect x="120" y="22" width="64" height="48" rx="3" '+F_+'/><path d="M128 56l14-14 10 8 14-20 10 14"/><path d="M130 82h50M130 94h30"/><rect x="104" y="100" width="76" height="12" rx="2"/>'
+});
+const FM_NOTE={machine:'Every line turns out about 20% more cars.',jigs:'Parts fit without filing, so lines turn out nearly half again as many cars.',line:'Each line turns out far more cars, with fewer workers.',conveyor:'Every line turns out many more cars again.',transfer:'Machines pass the work along on their own. Output climbs again.',automation:'The most output per line yet, with the fewest workers.'};
+function methItems(m){const out=[];if(!(m>0)) return out;METHODS.forEach((x,i)=>{if(i&&unlockM(x.year)===m){const prev=METHODS[i-1];out.push({cat:'feature',key:'meth_'+x.id,kind:'Factory method',name:x.name,text:x.desc+' '+(FM_NOTE[x.id]||'')+' Upgrade a works from the factory screen.',fm:1});}});return out;}
+function ntItems(m){return __ntItemsOld(m).concat(methItems(m));}
 let _hid=0;
 function hatchDefs(id,col){return '<defs><pattern id="'+id+'" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="'+col+'" fill-opacity=".10"/><path d="M0 0v6" stroke="'+col+'" stroke-width="1" stroke-opacity=".38"/></pattern></defs>';}
 function engrave(svgBody,id){return svgBody.replace(/fill="currentColor" fill-opacity="\.1[58]"/g,'fill="url(#'+id+')"');}
 function ntArt(x){const id='nth'+(++_hid);return '<svg viewBox="0 0 200 120" class="nt-art" aria-hidden="true" fill="none" stroke="#2e241b" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" style="color:#2e241b">'+hatchDefs(id,'#2e241b')+
   '<ellipse cx="100" cy="112" rx="80" ry="5" fill="#7c2b24" fill-opacity=".08" stroke="none"/>'+engrave(NTA[x.key]||NT_ART[x.cat]||NT_ART.feature,id)+'</svg>';}
 function ntModal(md){const it=md.items||[];
-  return '<div class="eyebrow">'+dateLabel(md.m)+'</div><h2>'+(it.every(x=>x.kind==='New market')?'A new market opens':'New in the design studio')+'</h2>'+
+  return '<div class="eyebrow">'+dateLabel(md.m)+'</div><h2>'+(it.every(x=>x.kind==='New market')?'A new market opens':it.every(x=>x.fm)?'A new way to build cars':'New in the design studio')+'</h2>'+
     '<div class="nt-list">'+it.map(x=>'<div class="nt-card">'+ntArt(x)+'<div class="nt-txt"><span class="nt-kind">'+x.kind+'</span><b>'+esc(x.name)+'</b>'+(x.text?'<p>'+esc(x.text)+'</p>':'')+'</div></div>').join('')+'</div>'+
-    '<div class="row"><button class="btn primary" data-act="ntdesign">Go to the design studio</button></div>';}
+    '<div class="row">'+(it.every(x=>x.fm)?'<button class="btn primary" data-act="ntfact">See your factories</button>':'<button class="btn primary" data-act="ntdesign">Go to the design studio</button>')+'</div>';}
 // Starting build quality for new designs (Game menu → Settings). Kept per device.
 function qDefault(){try{const v=parseInt(localStorage.getItem('marque-quality'),10);if(v>=0&&v<=100) return Math.round(v/5)*5;}catch(e){}return 50;}
 function hapOn(){try{return localStorage.getItem('marque-haptics')!=='off';}catch(e){return true;}}
@@ -2279,11 +2292,12 @@ function simMonth(){_newsBack=0;
       const est=estimateUnitCost(mdl,f,m);mdl.price=Math.round(est.total*1.5/5)*5;mdl.priceHist=[{m:m+1,price:mdl.price}];
       const par=p.replaces&&byId(state.models,p.replaces);
       if(par){mdl.parent=par.id;mdl.fame=(par.fame||0)*(par.seg===mdl.seg?.75:.4);mdl.owner=par.owner;mdl.price=Math.max(mdl.price,par.price);mdl.priceHist=[{m:m+1,price:mdl.price}];
-        let moved=0;state.factories.forEach(f=>{if(f.prod[par.id]){const pr=f.prod[par.id];f.prod[mdl.id]={lines:pr.lines,target:pr.target,exp:Math.floor((pr.exp||0)/2)};delete f.prod[par.id];moved+=pr.lines;if(f.ship.exact&&f.ship.exact[par.id]){f.ship.exact[mdl.id]=f.ship.exact[par.id];}}});
+        let moved=0;state.factories.forEach(f=>{if(f.prod[par.id]) moved+=f.prod[par.id].lines;});mdl.pendHand=par.id;
+        if(0){state.factories.forEach(f=>{if(f.prod[par.id]){const pr=f.prod[par.id];f.prod[mdl.id]={lines:pr.lines,target:pr.target,exp:Math.floor((pr.exp||0)/2)};delete f.prod[par.id];moved+=pr.lines;if(f.ship.exact&&f.ship.exact[par.id]){f.ship.exact[mdl.id]=f.ship.exact[par.id];}}});
         {const hs=(par.hist||[]).filter(h=>h.m>=m-3&&h.m<m);const d=hs.length?hs.reduce((a,h)=>a+(h.sold||0)+(h.missed||0),0)/hs.length:0;const fs=state.factories.filter(f=>f.prod[mdl.id]);const tot=fs.reduce((a,f)=>a+(f.prod[mdl.id].target||0),0);
           if(d>0&&tot>d*1.05){const k=d*1.05/tot;fs.forEach(f=>{f.prod[mdl.id].target=Math.max(1,Math.round(f.prod[mdl.id].target*k));});}}
-        if(par.status==='active') par.status='discontinued';par.successor=mdl.id;
-        addNews('Design finished: the '+p.name+' replaces the '+par.name+'. It starts with '+Math.round(mdl.fame)+' nameplate reputation carried over'+(moved?', and takes over the '+par.name+'\'s '+moved+' factory line'+(moved>1?'s':''):'')+'. Its lines retool this month, so none are built yet; it goes on sale next month, and the '+par.name+' keeps selling its stock meanwhile. Production is set to about what the '+par.name+' was selling. Check the price and the target.','good');}
+        }
+        addNews('Design finished: the '+p.name+' replaces the '+par.name+'. It starts with '+Math.round(mdl.fame)+' nameplate reputation carried over'+(moved?', and takes over the '+par.name+'\'s '+moved+' factory line'+(moved>1?'s':''):'')+'. The '+par.name+' was still built this month. Its lines switch to the new car now, so it goes on sale next month. Production is set to about what the '+par.name+' was selling. Check the price and the target.','good');}
       else addNews('Design finished: the '+p.name+' ('+SEG[p.spec.segment].name+'). Assign it to factory lines now. Lines retool this month and it goes on sale next month. Check its price and set a first-month target.','good');
       return false;}
     return true;
@@ -2323,6 +2337,13 @@ function simMonth(){_newsBack=0;
       Object.keys(split).forEach(r=>{const u=split[r];if(!u) return;const tr=transportCost(f.region,r,Y);C.cash-=u*tr;addStock(mdl.id,r,u,mat+lab+ovh+tr,f.id);});
     });
   });
+
+  // hand the lines of a replaced model over to its successor, after this month's building
+  state.models.filter(x=>x.pendHand).forEach(mdl=>{const par=byId(state.models,mdl.pendHand);delete mdl.pendHand;if(!par) return;
+    state.factories.forEach(f=>{if(f.prod[par.id]){const pr=f.prod[par.id];if(!f.prod[mdl.id]) f.prod[mdl.id]={lines:pr.lines,target:pr.target,exp:Math.floor((pr.exp||0)/2)};delete f.prod[par.id];if(f.ship.exact&&f.ship.exact[par.id]){f.ship.exact[mdl.id]=f.ship.exact[par.id];}}});
+    {const hs=(par.hist||[]).filter(h=>h.m>=m-3&&h.m<m);const d=hs.length?hs.reduce((a,h)=>a+(h.sold||0)+(h.missed||0),0)/hs.length:0;const fs=state.factories.filter(f=>f.prod[mdl.id]);const tot=fs.reduce((a,f)=>a+(f.prod[mdl.id].target||0),0);
+      if(d>0&&tot>d*1.05){const k=d*1.05/tot;fs.forEach(f=>{f.prod[mdl.id].target=Math.max(1,Math.round(f.prod[mdl.id].target*k));});}}
+    if(par.status==='active') par.status='discontinued';par.successor=mdl.id;});
 
   // market
   const base=potential(Y)*SEASON[m%12]*eventMult(m);
@@ -2472,6 +2493,7 @@ function simMonth(){_newsBack=0;
   const nm=state.m;
   EVENTS.forEach(e=>{if(e.from===nm) addNews(e.name+'. '+e.text,'warn');if(e.to+1===nm) addNews(e.name+' is over. Demand is recovering.','good');});
   [CHASSIS,SUSP,ENGINES,GEARS,BODIES,INTERIORS,FEATURES].forEach(list=>list.forEach(c=>{if(unlockM(c.year)===nm&&nm>0) addNews('New in the design studio: '+c.name+'.','good');}));
+  METHODS.forEach((x,i)=>{if(i&&unlockM(x.year)===nm&&nm>0) addNews('New in the design studio: '+x.name+' (a faster way to build cars).','good');});
   SEG_IDS.forEach(s=>{if(unlockM(SEG[s].from)===nm&&nm>0) addNews('A new market opens: '+SEG[s].name+'. '+SEG[s].desc,'good');});
   if(nm%12===0){const r=taxRate(yearOf(nm));const r0=taxRate(yearOf(nm-1));if(r!==r0) addNews('The federal corporate tax rate is now '+(r*100).toFixed(1)+'%.','warn');}
 }
@@ -2777,7 +2799,7 @@ function viewModels(){
     '<div class="kpis" style="grid-template-columns:repeat(2,1fr)"><div class="kpi"><label>Overall rating</label><b>'+(x.rating!=null?x.rating+' <span class="small">'+rateWord(x.rating)[0]+'</span>':'—')+'</b><span>'+(x.ratingParts?'Design '+x.ratingParts.design+' · Value '+x.ratingParts.value+' · Owners '+x.ratingParts.owner:'After its first month on sale')+'</span></div><div class="kpi"><label>Nameplate reputation</label><b>'+Math.round(x.fame||0)+' <span class="small">'+fameWord(x.fame||0)+'</span></b><span>Grows with sales and race results. A successor inherits most of it.</span></div></div>'+
     ((()=>{const pj=state.projects.find(p=>p.replaces===x.id);return pj?'<div class="alert info"><span class="chip info">In design</span><span>Its successor, the <b>'+esc(pj.name)+'</b>, is in the studio. It will be ready in '+dateLabel(state.m+pj.monthsLeft)+' ('+pj.monthsLeft+' month'+(pj.monthsLeft===1?'':'s')+' left) and will take over this model\'s lines. <button class="btn small" data-act="tab" data-tab="design">Open</button></span></div>':'';})())+
     launchNote(x)+(x.status==='active'&&!x.successor&&!state.projects.some(p=>p.replaces===x.id)?'<div class="row"><button class="btn" data-act="successor" data-id="'+x.id+'">Design a successor</button><span class="hint">Starts a new design that replaces this model and carries over its name and reputation.</span></div>':'')+
-    (wkOn()?'<div class="alert info" style="display:block"><b>Market research: '+SEG[x.seg].name.toLowerCase()+' buyers</b><div class="small">You know '+wKnownCount(x.seg)+' of 18 of what buyers look for in this kind of car. Anything you learn applies to every '+SEG[x.seg].name.toLowerCase()+' you build.</div>'+(state.research?'<div class="small" style="margin-top:6px"><b>'+(state.research.seg===x.seg?'A study of '+SEG[x.seg].name.toLowerCase()+' buyers is under way':'A study of '+SEG[state.research.seg].name.toLowerCase()+' buyers is under way')+', back in '+state.research.monthsLeft+' month'+(state.research.monthsLeft===1?'':'s')+'.</b> Only one study at a time.</div>':'<div class="row" style="margin-top:6px"><button class="btn small" data-act="research" data-id="'+x.id+'">Commission market research · '+money(surveyCost(Y))+'</button><span class="hint">Takes about '+surveyMonths()+' months and tells you what working, middle and wealthy buyers care about in this kind of car.</span></div>')+'</div>':'')+
+    (wkOn()?'<div class="alert info" style="display:block"><b>Market research: '+SEG[x.seg].name.toLowerCase()+' buyers</b><div class="small">You know '+wKnownCount(x.seg)+' of 18 of what buyers look for in this kind of car. Anything you learn applies to every '+SEG[x.seg].name.toLowerCase()+' you build.</div>'+(state.research?'<div class="small" style="margin-top:6px"><b>'+(state.research.seg===x.seg?'A study of '+SEG[x.seg].name.toLowerCase()+' buyers is under way':'A study of '+SEG[state.research.seg].name.toLowerCase()+' buyers is under way')+', back in '+state.research.monthsLeft+' month'+(state.research.monthsLeft===1?'':'s')+'.</b> Only one study at a time.</div>':wKnownCount(x.seg)>=18?'':'<div class="row" style="margin-top:6px"><button class="btn small" data-act="research" data-id="'+x.id+'">Commission market research · '+money(surveyCost(Y))+'</button><span class="hint">Takes about '+surveyMonths()+' months and tells you what working, middle and wealthy buyers care about in this kind of car.</span></div>')+'</div>':'')+
     '<dl class="kv"><dt>Sold last month</dt><dd>'+int(soldSince(x,1))+'</dd><dt>Sold last 3 months</dt><dd>'+int(soldSince(x,3))+'</dd><dt>Sold last 12 months</dt><dd>'+int(soldSince(x,12))+'</dd><dt>Lifetime sold</dt><dd>'+int(x.life.sold)+'</dd><dt>Stock on hand</dt><dd>'+int(stockTotal(x.id))+'</dd></dl>'+
     (lv('books')>=2?    '<h3>Lifetime profit</h3><dl class="kv"><dt>Revenue at sticker price</dt><dd>'+money(x.life.rev)+'</dd><dt>Dealer margins</dt><dd>−'+money(x.life.dealer)+'</dd><dt>Cost of cars sold <span class="small">(materials, labor, factory overhead, transport)</span></dt><dd>−'+money(x.life.cogs)+'</dd><dt>Storage</dt><dd>−'+money(x.life.storage)+'</dd><dt>Scrapped stock</dt><dd>−'+money(x.life.scrap||0)+'</dd><dt>Design project</dt><dd>−'+money(x.life.design)+'</dd><dt><b>Lifetime profit</b></dt><dd><b class="'+(x.life.profit<0?'neg':'')+'">'+money(x.life.profit)+'</b> '+deltaHtml(r&&r.m===state.m-1?r.profit:null)+'</dd></dl>'+
     '<p class="hint">Cars still in stock are not counted until they sell. Dealer signing fees and branch offices are shared by every model, so they are not charged to any one car.</p>':'<h3>Lifetime profit</h3><dl class="kv"><dt>Revenue</dt><dd>'+bm(x.life.rev)+'</dd><dt><b>Lifetime profit</b></dt><dd><b class="'+(x.life.profit<0?'neg':'')+'">'+bm(x.life.profit)+'</b> '+deltaHtml(r&&r.m===state.m-1?r.profit:null)+'</dd></dl><p>'+hireHint('books',2).replace('see this','see where the money goes: dealer margins, build cost, storage and design')+'</p>')+
@@ -2859,7 +2881,7 @@ function viewDesigner(){
     '<div class="field"><label for="d-ch">Chassis</label><select id="d-ch" class="sel" data-inp="dspec" data-k="chassis">'+opt(CHASSIS,d.spec.chassis)+'</select></div>'+
     '<div class="field"><label for="d-su">Suspension</label><select id="d-su" class="sel" data-inp="dspec" data-k="susp">'+opt(SUSP,d.spec.susp)+'</select></div>'+
     '<div class="field"><label for="d-en">Engine type</label><select id="d-en" class="sel" data-inp="dspec" data-k="engine">'+['gas','steam','electric'].map(t=>'<optgroup label="'+POWER[t].name+'">'+avail(ENGINES,m).filter(e=>e.type===t).map(c=>'<option value="'+c.id+'" '+(c.id===d.spec.engine?'selected':'')+'>'+esc(c.name)+'</option>').join('')+'</optgroup>').join('')+'</select></div>'+
-    '<div class="field"><label for="d-sz">Engine or battery size</label><select id="d-sz" class="sel" data-inp="dspec" data-k="size">'+Object.values(SIZES).map(s=>'<option value="'+s.id+'" '+(s.id===d.spec.size?'selected':'')+'>'+s.name+'</option>').join('')+'</select></div>'+
+    '<div class="field"><label for="d-sz">Engine size</label><select id="d-sz" class="sel" data-inp="dspec" data-k="size">'+Object.values(SIZES).map(s=>'<option value="'+s.id+'" '+(s.id===d.spec.size?'selected':'')+'>'+s.name+'</option>').join('')+'</select></div>'+
     '<div class="field"><label for="d-gb">Gearbox</label><select id="d-gb" class="sel" data-inp="dspec" data-k="gearbox">'+opt(GEARS,d.spec.gearbox)+'</select></div>'+
     '<div class="field"><label for="d-bo">Body</label><select id="d-bo" class="sel" data-inp="dspec" data-k="body">'+opt(BODIES,d.spec.body)+'</select></div>'+
     '<div class="field"><label for="d-it">Interior</label><select id="d-it" class="sel" data-inp="dspec" data-k="interior">'+opt(INTERIORS,d.spec.interior)+'</select></div>'+
@@ -3140,7 +3162,7 @@ function launchSuggest(x){if(!x||x.saleFrom!==state.m) return null;
   if(ds.length){const d=ds.reduce((a,v)=>a+v,0)/ds.length;return {n:Math.round(d*.6/5)*5,why:'Your other '+SEG[x.seg].name.toLowerCase()+' models find about '+int(d)+' buyers a month. A brand-new nameplate usually starts lower.'};}
   return {n:null,why:'This is a new nameplate with no sales history. Start modestly and raise production once you see how it sells.'+(lv('market')<2?' Market research staff can forecast demand after its first month.':'')};}
 function launchNote(x){const s=launchSuggest(x);if(!s) return '';const tgt=state.factories.reduce((a,f)=>a+(f.prod[x.id]?Math.floor(f.prod[x.id].target||0):0),0);
-  return '<div class="alert info"><span class="chip info">Launch</span><span>The '+esc(x.name)+' goes on sale this month. None were built last month while the factory retooled. '+s.why+(s.n!=null?' Suggested first-month build: <b>'+int(s.n)+'</b>.':'')+' Current target: <b>'+int(tgt)+'</b>. <button class="btn small" data-act="tab" data-tab="factories">Set production</button></span></div>';}
+  return '<div class="alert info"><span class="chip info">Launch</span><span>The '+esc(x.name)+' goes on sale this month. '+(x.parent?'Its lines switched over last month. ':'None were built last month while the factory retooled. ')+s.why+(s.n!=null?' Suggested first-month build: <b>'+int(s.n)+'</b>.':'')+' Current target: <b>'+int(tgt)+'</b>. <button class="btn small" data-act="tab" data-tab="factories">Set production</button></span></div>';}
 function forecastRange(x){const L=lv('market');if(L<2) return null;const h=x.hist[x.hist.length-1];if(!h||h.m!==state.m-1) return null;const m=state.m;const base=h.demand*SEASON[m%12]/SEASON[(m+11)%12]*eventMult(m)/eventMult(m-1);const w=L===2?.25:.1;const c=base*(1+w*.6*hashNoise(x.id,m));return [Math.max(0,Math.floor(c*(1-w))),Math.ceil(c*(1+w)),c];}
 function forecastBlock(x){const L=lv('market');if(L<2) return '<h3>Demand forecast</h3><p>'+hireHint('market',2).replace('see this','get a forecast of next month\'s demand')+'</p>';const f=forecastRange(x);if(!f) return '<h3>Demand forecast</h3><p class="muted">Available after a full month on sale.</p>';return '<h3>Demand forecast</h3><p>Next month, buyers for the '+esc(x.name)+' at '+money(x.price)+': <b>'+int(f[0])+' to '+int(f[1])+'</b>.</p><p class="hint">Based on this month\'s market. Price changes, rival launches and the economy can move it.</p>';}
 function cashOutlook(){const H=state.fin.hist.slice(-3);if(!H.length) return '';const avg=H.reduce((a,p)=>a+p.pretax,0)/H.length;let cash=state.company.cash;const Y=yearOf(state.m);const rows=[];let qtd=state.fin.qtd;
@@ -3466,7 +3488,7 @@ const A={
 
   dbarjump:()=>{const p=document.getElementById('design-preview');if(p) p.scrollIntoView({behavior:'smooth',block:'start'});},
   dstep:el=>{const r=el.dataset.r;const d=dealerRec(r);d.target=clamp((d.target||0)+(+el.dataset.d),0,dealerSlots(r,yearOf(state.m)));save();render();},
-  visit:el=>doVisit(el.dataset.r),
+  visit:el=>{const lv0=state.lastVisit;doVisit(el.dataset.r);if(state.lastVisit!==lv0&&ui.tab!=='map'){ui.tab='map';render();window.scrollTo(0,0);}},
   pstep:el=>{const x=byId(state.models,el.dataset.id);if(!x) return;CHG.price({dataset:{id:x.id},value:String(Math.max(0,x.price+(+el.dataset.d||0)))});},
   tgdone:()=>{state.flags=state.flags||{};state.flags.tg=state.flags.tg||{};state.flags.tg[ui.tab]=1;ui.tgOpen=null;save();render();},
   tgopen:()=>{ui.tgOpen=ui.tab;render();},
@@ -3575,6 +3597,7 @@ const A={
   fiveyes:()=>{state.five='yes';state.fivePending=false;REGIONS.forEach(r=>{state.regRep[r.id]=clamp(regRep(r.id)+3,0,100);});addNews(state.company.name+' matches the Five-Dollar Day. Workers stay, and newspapers praise the move.','good');ui.modal=null;save();render();},
   fiveno:()=>{state.five='no';state.fivePending=false;addNews(state.company.name+' refuses to raise pay. Skilled workers leave for better-paying plants.','warn');ui.modal=null;save();render();},
   closemodal:()=>{if(ui.modal&&['fiveday','union','contract'].includes(ui.modal.type)) return;const _was=ui.modal&&ui.modal.type;ui.modal=ui.ntPending||laborModal()||null;ui.ntPending=null;render();if(_was==='era'||_was==='end') askForRating();},
+  ntfact:()=>{ui.modal=null;ui.ntPending=null;ui.tab='factories';render();window.scrollTo(0,0);},
   ntdesign:()=>{ui.modal=null;ui.ntPending=null;ui.tab='design';render();window.scrollTo(0,0);},
   owneropen:()=>{ui.modal={type:'owner'};render();},
   owpick:()=>{const rnd=a=>a[Math.floor(Math.random()*a.length)];const f=document.getElementById('ow-first'),l=document.getElementById('ow-last');if(f) f.value=rnd(OWNER_FIRST);if(l) l.value=rnd(OWNER_LAST);},
@@ -4711,7 +4734,7 @@ function setTitle(){if(view==='country'){const srv=SELRV&&(HOST.state.rivals||[]
 function showCountry(){closePanel();view='country';resetCC();setTimeout(()=>{try{tutUpdate();}catch(e){}},0);$('layers').hidden=true;setTitle();draw(performance.now());}
 const cityFor=id=>{const r=REG.find(q=>q.id===id);return {id,city:r.city,region:r.name,home:id===HOME,seed:id===HOME?0:REG.indexOf(r)*13,dealers:DEALERS[id]||0,fact:(FACT[id]&&FACT[id].all)||0};};
 function showTown(id){
-  closePanel();CITY=cityFor(id);computeBuilt();
+  closePanel();CITY=cityFor(id);try{RACE=raceHere();}catch(e){}computeBuilt();
   view='town';$('layers').hidden=false;setTitle();rebuild();sig=sigNow();try{tutPrev=null;tutUpdate();}catch(e){}
 }
 // ---------- input: drag, pinch, wheel, tap ----------
@@ -5042,7 +5065,7 @@ function reviewHTML(S,fresh){
     return '<p class="rvline"><b>'+esc(r.model||'Your car')+'</b> '+(pl?'finished '+ord(pl)+(r.n?' of '+r.n:''):'broke down')+' in the '+esc(T.name.toLowerCase())+' at '+esc(city)+'.'+(pl===1?' A win!':'')+'</p>';}).join('');
   const al=(HOST.computeAlerts()||[]).slice(0,6);const L={bad:'Act',warn:'Watch',good:'News',info:'Note',rival:'Rival'};
   if(al.length) h+='<h3>Briefing</h3><div class="alerts">'+al.map(a=>'<div class="alert '+a.sev+'"><span class="chip '+a.sev+'">'+L[a.sev]+'</span><span>'+a.text+'</span></div>').join('')+'</div>';
-  {const seen=new Set(al.map(a=>a.text));fresh=fresh.filter(n=>!seen.has(n.text));}
+  {const nz=t=>{const d=document.createElement('div');d.innerHTML=String(t||'');return (d.textContent||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();};const seen=new Set(al.map(a=>nz(a.text)));fresh=fresh.filter(n=>!seen.has(nz(n.text)));}
   if(fresh.length) h+='<h3>In the papers</h3>'+fresh.slice(0,6).map(n=>'<p class="rvline">'+n.text+'</p>').join('')+(fresh.length>6?'<p class="rvline muted">And '+(fresh.length-6)+' more on the News page.</p>':'');
   h+='<div class="row2"><button class="mbtn" data-act="tab" data-tab="overview" id="rvOv">Full overview</button><button class="mbtn ghost" id="rvClose">Back to the map</button></div></div>';
   return h;}
